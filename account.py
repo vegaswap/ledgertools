@@ -119,7 +119,7 @@ class LedgerAccount:
             APDU_P2_NO_CHAINCODE,
         )
         apdu += struct.pack(">B", len(bip32_path))
-        apdu += self.bip32_path
+        apdu += bip32_path
         result = self._send_to_device(apdu)
 
         # Parse result
