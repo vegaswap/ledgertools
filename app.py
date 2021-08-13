@@ -4,6 +4,8 @@ ledger app
 
 # https://github.com/LedgerHQ/app-ethereum/blob/master/doc/ethapp.asc#sign-eth-transaction
 
+import sys
+import argparse
 from ledger_usb import *
 import utils
 
@@ -94,7 +96,13 @@ def balance_erc20(ledger_account):
     myaddr = ledger_account.address
 
     b = ctr.functions.balanceOf(myaddr).call()
-    print(b / 10 ** 18)
+    print("USDT ", b / 10 ** 18)
+
+
+def balance(ledger_account):
+    myaddr = ledger_account.address
+    bnb_bal = w3.eth.get_balance(myaddr)
+    print("BNB ", bnb_bal/10**18)
 
 
 def deploy_example(ledger_account):
@@ -106,25 +114,44 @@ def deploy_example(ledger_account):
     pushtx(signedtx)
 
 
-if __name__ == "__main__":
-    print("main")
-    # misc account ID
-    accountID = 2
+# def run_app():
 
+#     print(ledger_account.get_version())
+#     addr = ledger_account.address
+#     print(addr)
+
+#     balance_erc20(ledger_account)
+
+#     deploy_example(ledger_account)
+
+
+def get_ledger():
     try:
+        # misc account ID
+        accountID = 2
         ledger_account = LedgerAccount(account_id=accountID)
-        print("ledger loaded")
-
-        print(ledger_account.get_version())
-        addr = ledger_account.address
-        print(addr)
-
-        balance_erc20(ledger_account)
-
-        deploy_example(ledger_account)
-
+        print("ledger loaded ", ledger_account)
+        return ledger_account
     except LedgerUsbException:
         print("Ledger not active")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    print("main")
+
+    cmd = sys.argv[1]
+    ledger_account = get_ledger()
+    if cmd == 'balance USDT':
+        balance(ledger_account)
+    elif cmd == 'balance':
+        balance(ledger_account)
+    elif cmd == 'accounts':
+        for i in range(3):
+            addr = ledger_account.get_address(i)
+            print(addr)
+
+    # print(sys.argv)
 
     # USD_amount = 1000
     # vega_corp = "0xe537ce8a0C8bB913A97EA18b148752bc84c67F5d"
