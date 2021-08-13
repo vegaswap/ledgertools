@@ -101,7 +101,8 @@ def balance_erc20(ledger_account):
 
 def balance(ledger_account):
     myaddr = ledger_account.address
-    bnb_bal = w3.eth.get_balance(myaddr)
+    bnb_bal = w3.eth.getBalance(myaddr)
+
     print("BNB ", bnb_bal/10**18)
 
 
@@ -138,18 +139,34 @@ def get_ledger():
 
 
 if __name__ == "__main__":
-    print("main")
+    l = len(sys.argv)
+    if l == 1:
+        print("no arg provided")
+        sys.exit(1)
+
+    cmdbalanceUSDT = 'balanceUSDT'
+    cmdbalance = 'balance'
+    cmdVersion = 'version'
+    cmds = [cmdbalanceUSDT, cmdbalance, cmdVersion]
 
     cmd = sys.argv[1]
     ledger_account = get_ledger()
-    if cmd == 'balance USDT':
+    if cmd == cmdbalanceUSDT:
+        balance_erc20(ledger_account)
+    elif cmd == cmdbalance:
         balance(ledger_account)
-    elif cmd == 'balance':
-        balance(ledger_account)
+    elif cmd == cmdVersion:
+        lv = ledger_account.get_version()
+        print (lv)
+
     elif cmd == 'accounts':
         for i in range(3):
             addr = ledger_account.get_address(i)
             print(addr)
+
+    else:
+        print ("unknown command")
+        print ("commands ", cmds)
 
     # print(sys.argv)
 
