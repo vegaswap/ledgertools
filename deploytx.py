@@ -17,7 +17,9 @@ w3 = Web3(Web3.HTTPProvider(URL))
 ercabi = utils.load_abi("./", "erc20")
 
 
-def get_deploy_tx():
+def get_deploy_tx(ledger_account):
+    myadress = ledger_account.address
+
     contract_source_code = '''
     pragma solidity ^0.8.5;
 
@@ -41,13 +43,14 @@ def get_deploy_tx():
     contract_ = w3.eth.contract(
         abi=contract_interface['abi'], bytecode=contract_interface['bin'])
 
-    nonce = w3.eth.getTransactionCount(acct.address, 'pending')
+    nonce = w3.eth.getTransactionCount(myadress) #, 'pending')
     # print(acct.address, nonce)
 
     # est = w3.eth.estimate_gas(tx)
     # print("EST ", est)
 
-    txparams = {'from': acct.address,
+    txparams = {
+                # 'from': myadress,
                 # 'to': '',
                 'nonce': nonce,
                 "gas": 140000,

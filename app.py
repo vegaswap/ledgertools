@@ -99,11 +99,11 @@ def balance_erc20(ledger_account):
 
 def deploy_example(ledger_account):
     import deploytx
-    tx = deploytx.get_deploy_tx()
+    tx = deploytx.get_deploy_tx(ledger_account)
 
     signedtx = ledger_account.signTransaction(tx)
     print(signedtx)
-    # pushtx(signedtx)
+    pushtx(signedtx)
 
 
 if __name__ == "__main__":
