@@ -101,7 +101,8 @@ def balance_erc20(ledger_account):
 
 def balance(ledger_account):
     myaddr = ledger_account.address
-    bnb_bal = w3.eth.get_balance(myaddr)
+    bnb_bal = w3.eth.getBalance(myaddr)
+
     print("BNB ", bnb_bal/10**18)
 
 
@@ -142,6 +143,11 @@ if __name__ == "__main__":
 
     accountID = sys.argv[1]
     cmd = sys.argv[2]
+
+    l = len(sys.argv)
+    if l != 3:
+        print("wrong number of args provided")
+        sys.exit(1)
     
     # misc account ID
     # accountID = 2
@@ -149,29 +155,35 @@ if __name__ == "__main__":
     ledger_account = get_ledger(accountID)
 
     if cmd == 'balance USDT':
-        balance(ledger_account)
+        # balance(ledger_account)
+        balance_erc20(ledger_account)
     elif cmd == 'version':
         print(ledger_account.get_version())
     elif cmd == 'balance':
         balance(ledger_account)
     elif cmd == 'accounts':
+        # ledger_account.show_accounts()
         for i in range(3):
             addr = ledger_account.get_address(i)
             print(addr)
     elif cmd == 'help':
         print ("usage: python app.py accountID command")
 
-    # print(sys.argv)
+    else:
+        print ("unknown command")
+        # print ("commands ", cmds)
 
-    # USD_amount = 1000
-    # vega_corp = "0xe537ce8a0C8bB913A97EA18b148752bc84c67F5d"
-    # to_address = ca(vega_corp)
-    # send_erc20(USD_amount, to_address)
 
-    # bnb_dec = 18
-    # amount = int(0.001 * 10 ** bnb_dec)
-    # trading_address = ca("0xe537ce8a0C8bB913A97EA18b148752bc84c67F5d")
-    # to_address = ca("0xEA5037E97803021Ab91b276dfe0e93724BCaE370")
-    # send_simple_tx(ledger_account, amount, to_address)
 
-    # ledger_account.show_accounts()
+
+# USD_amount = 1000
+# vega_corp = "0xe537ce8a0C8bB913A97EA18b148752bc84c67F5d"
+# to_address = ca(vega_corp)
+# send_erc20(USD_amount, to_address)
+
+# bnb_dec = 18
+# amount = int(0.001 * 10 ** bnb_dec)
+# trading_address = ca("0xe537ce8a0C8bB913A97EA18b148752bc84c67F5d")
+# to_address = ca("0xEA5037E97803021Ab91b276dfe0e93724BCaE370")
+# send_simple_tx(ledger_account, amount, to_address)
+
