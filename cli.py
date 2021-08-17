@@ -20,6 +20,10 @@ logger.add(sys.stdout, format="{time} {level} {message}", filter="my_module", le
 
 BSC_USDT = "0x55d398326f99059fF775485246999027B3197955"
 
+# critical_accounts = [0 , 1]
+#critical
+# if aid in critical_accounts:
+
 try:
     from whitelist import whitelist
 except:
@@ -54,9 +58,8 @@ def check_critical():
 @click.option('--aid', help='account ID', type=int)
 @click.pass_context
 def ltools(ctx, aid: int):
-    logger.debug("main")
     aid = int(aid)
-    print ("main ",ctx, aid, type(aid))
+    logger.debug (f"main {ctx} {aid}")
 
     ledger_account = get_ledger(aid)
 
@@ -66,9 +69,7 @@ def ltools(ctx, aid: int):
     w3 = Web3(Web3.HTTPProvider(URL))
     ctx.obj['w3'] = w3
 
-    critical_accounts = [0 , 1]
-    #critical
-    # if aid in critical_accounts:
+    
 
 def show_balance(w3, addr):
     ercabi = utils.load_abi("./", "erc20")
@@ -98,14 +99,6 @@ def pushtx(w3, signedtx):
 
     # contractAddress
     # cumulativeGasUsed
-
-# @ltools.command()
-# @click.pass_context
-# def send(ctx):
-#     myaddr = ctx.obj['ledger_account'].address
-#     check_critical()
-#     # show_balance(myaddr)
-
 
 @ltools.command()
 @click.pass_context
@@ -170,6 +163,35 @@ def send_tx(ledger_account, w3, sendamount, to_address):
     print(signedtx)
     pushtx(w3, signedtx)
 
+def send_erc20(ledger_account, w3, USD_amount, to_address):
+    logger.debug(f"send_erc20 {USD_amount} {to_address}")
+
+    ercabi = utils.load_abi("./", "erc20")
+    ctr = utils.load_contract(w3, BSC_USDT, ercabi)
+    print(ctr.functions.name().call())
+
+    myaddr = ledger_account.address
+    nonce = w3.eth.getTransactionCount(myaddr)
+
+    bnbvalue = 0
+
+    tx_params = {
+        "chainId": 56,
+        # "to": to_address,
+        "value": bnbvalue,
+        "gas": 50000,
+        "gasPrice": 5000 * 10 ** 6,
+        "nonce": nonce,
+    }
+
+    btx = ctr.functions.transfer(
+        to_address, USD_amount).buildTransaction(tx_params)
+
+    signedtx = ledger_account.signTransaction(btx)
+    logger.debug(f"signedtx {signedtx}")
+
+    print(signedtx)
+    pushtx(w3, signedtx)
 
 @ltools.command()
 @click.pass_context
@@ -189,6 +211,24 @@ def sendbnb(ctx, amount, to):
     else:
         print("address not whitelisted")
 
+@ltools.command()
+@click.pass_context
+@click.option('--amount', help='amount', type=int)
+@click.option('--to', help='address')
+def sendusdt(ctx, amount, to):
+    logger.debug(f"send usdt {amount} {to}")
+    ledger_account = ctx.obj['ledger_account']
+    print("send ", amount)
+    print("to ", to)
+    #TODO check high amounts
+    w3 = ctx.obj['w3']
+    #TODO whitelist addresses
+    if to in whitelist.keys():
+        addr = whitelist[to]
+        send_erc20(ledger_account, w3, amount, addr)
+    else:
+        print("address not whitelisted")
+
 
 
 @ltools.command()
@@ -197,6 +237,18 @@ def sendbnb(ctx, amount, to):
 def version(ctx, name):
     logger.debug("version")
     click.secho(f"{ctx.obj['ledger_account'].get_version()}", fg="green")
+
+#TODO
+def deploy_example(ledger_account):
+    import deploytx
+    tx = deploytx.get_deploy_tx(ledger_account)
+
+    signedtx = ledger_account.signTransaction(tx)
+    print(signedtx)
+    pushtx(signedtx)
+
+
+
 
 
 
