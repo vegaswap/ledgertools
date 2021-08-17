@@ -141,35 +141,74 @@ def get_ledger(accountID):
         print("Ledger not active")
         sys.exit(1)
 
+@click.command()
+@click.option('--count', default=1, help='Number of greetings.')
+def hello(count, name):
+    """Simple program that greets NAME for a total of COUNT times."""
+    for x in range(count):
+        click.echo(f"Hello {name}!")
 
-if __name__ == "__main__":
-    print("app")
-
-    accountID = int(sys.argv[1])
-    cmd = sys.argv[2]
+def clix():
+    print("ledger app")
 
     l = len(sys.argv)
     if l != 3:
         print("wrong number of args provided")
         sys.exit(1)
+
+
+    accountID = int(sys.argv[1])
+
+    critical_accounts = [0 , 1]
+
+    #critical
+    if accountID in critical_accounts:
+        click.secho(f"PERFORMING CRITICAL TASKS", bg='black', fg='red')
+        click.secho(f"YES/NO (Y/N)", bg='black', fg='red')
+        yesno = input()
+        if yesno == "Y":
+            click.secho(f"PROCEED", bg='black', fg='red')
+        elif yesno == "N":
+            click.secho(f"dont proceed", bg='black', fg='red')
+            sys.exit(0)
+        else:
+            click.secho(f"dont proceed", bg='black', fg='red')
+            sys.exit(0)
+
+
+    cmd = sys.argv[2]
+
     
     # misc account ID
-    # accountID = 2
 
     ledger_account = get_ledger(accountID)
 
     if cmd == 'balanceUSDT':
         # balance(ledger_account)
         balance_erc20(ledger_account)
+
     elif cmd == 'version':
         print(ledger_account.get_version())
+
     elif cmd == 'balance':
         balance(ledger_account)
-    elif cmd == 'accounts':
+    elif cmd == 'listAccounts':
         # ledger_account.show_accounts()
         for i in range(3):
             addr = ledger_account.get_address(i)
             print(addr)
+
+    elif cmd == 'deploy':
+        click.secho(f"PERFORMING CRITICAL TASKS", bg='black', fg='red')
+        click.secho(f"YES/NO (Y/N)", bg='black', fg='red')
+        yesno = input()
+        if yesno == "Y":
+            click.secho(f"PROCEED", bg='black', fg='red')
+        elif yesno == "N":
+            click.secho(f">> dont proceed", bg='black', fg='red')
+            sys.exit(0)
+            
+
     elif cmd == 'help':
         print ("usage: python app.py accountID command")
 
@@ -177,7 +216,36 @@ if __name__ == "__main__":
         print ("unknown command")
         # print ("commands ", cmds)
 
+# @click.group()
+# @click.option('--account', default=0, help='account id')
+# def cli():
+#     pass
 
+# @click.group()
+# @click.option('--account', default=0, help='account id')
+# def cli():
+#     pass
+
+@click.group()
+def group():
+    pass
+
+# @group.command()
+@click.option('--account', default=0, help='account id')
+def init():
+    click.echo('init {account}')
+
+# @group.command()
+@click.option('--account', default=0, help='account id')
+def drop():
+    click.echo('drop {account}')
+
+if __name__ == "__main__":
+    group.add_command(init)
+    group.add_command(drop)
+    # cli.add_command(init)
+    # cli.add_command(drop)
+    # cli()
 
 
 # USD_amount = 1000
