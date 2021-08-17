@@ -116,7 +116,7 @@ def deploy_example(ledger_account):
 
 # def run_app():
 
-#     print(ledger_account.get_version())
+#     
 #     addr = ledger_account.address
 #     print(addr)
 
@@ -125,12 +125,12 @@ def deploy_example(ledger_account):
 #     deploy_example(ledger_account)
 
 
-def get_ledger():
-    try:
-        # misc account ID
-        accountID = 2
+def get_ledger(accountID):
+    try:        
         ledger_account = LedgerAccount(account_id=accountID)
-        print("ledger loaded ", ledger_account)
+        addr = ledger_account.get_address(accountID)
+        print("ledger loaded ", ledger_account, "\taccountID %i\taddress %s"%(accountID, addr))
+
         return ledger_account
     except LedgerUsbException:
         print("Ledger not active")
@@ -138,18 +138,28 @@ def get_ledger():
 
 
 if __name__ == "__main__":
-    print("main")
+    print("app")
 
-    cmd = sys.argv[1]
-    ledger_account = get_ledger()
+    accountID = sys.argv[1]
+    cmd = sys.argv[2]
+    
+    # misc account ID
+    # accountID = 2
+
+    ledger_account = get_ledger(accountID)
+
     if cmd == 'balance USDT':
         balance(ledger_account)
+    elif cmd == 'version':
+        print(ledger_account.get_version())
     elif cmd == 'balance':
         balance(ledger_account)
     elif cmd == 'accounts':
         for i in range(3):
             addr = ledger_account.get_address(i)
             print(addr)
+    elif cmd == 'help':
+        print ("usage: python app.py accountID command")
 
     # print(sys.argv)
 
