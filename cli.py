@@ -20,9 +20,11 @@ logger.add(sys.stdout, format="{time} {level} {message}", filter="my_module", le
 
 BSC_USDT = "0x55d398326f99059fF775485246999027B3197955"
 
-whitelist = {"vcorp": "0xe537ce8a0C8bB913A97EA18b148752bc84c67F5d",
-"funding": "0x0BB097042d12aF8A7cb2878B30a6b04A33D4cE6B",
-"main": "0x3dd34225F14423Fd3592c52634c1fC974E04f5C0"}
+try:
+    from whitelist import whitelist
+except:
+    whitelist = dict()
+
 
 def get_ledger(accountID):
     try:
