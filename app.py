@@ -141,7 +141,7 @@ def get_ledger(accountID):
 if __name__ == "__main__":
     print("app")
 
-    accountID = sys.argv[1]
+    accountID = int(sys.argv[1])
     cmd = sys.argv[2]
 
     l = len(sys.argv)
