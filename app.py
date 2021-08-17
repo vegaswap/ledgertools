@@ -8,6 +8,7 @@ import sys
 import argparse
 from ledger_usb import *
 import utils
+import click
 
 from account import LedgerAccount
 
@@ -90,20 +91,22 @@ def balance_erc20(ledger_account):
     ercabi = utils.load_abi("./", "erc20")
 
     ctr = utils.load_contract(w3, BSC_USDT, ercabi)
-    print(ctr.functions.name().call())
+    name = ctr.functions.name().call()
+    sym = ctr.functions.symbol().call()
+    # click.secho(,fg="green")
 
     # get my address
     myaddr = ledger_account.address
 
     b = ctr.functions.balanceOf(myaddr).call()
-    print("USDT ", b / 10 ** 18)
+    click.secho(f"{name}: {b/10**18} ({sym})", fg="green")
 
 
 def balance(ledger_account):
     myaddr = ledger_account.address
     bnb_bal = w3.eth.getBalance(myaddr)
 
-    print("BNB ", bnb_bal/10**18)
+    click.secho(f"BNB {bnb_bal/10**18}", fg="green")
 
 
 def deploy_example(ledger_account):
@@ -129,8 +132,9 @@ def deploy_example(ledger_account):
 def get_ledger(accountID):
     try:        
         ledger_account = LedgerAccount(account_id=accountID)
-        addr = ledger_account.get_address(accountID)
-        print("ledger loaded ", ledger_account, "\taccountID %i\taddress %s"%(accountID, addr))
+        address = ledger_account.get_address(accountID)
+        #{ledger_account} \t
+        click.secho(f"ledger loaded accountID {accountID}\taddress: {address}", bg='black', fg='blue')
 
         return ledger_account
     except LedgerUsbException:
@@ -154,7 +158,7 @@ if __name__ == "__main__":
 
     ledger_account = get_ledger(accountID)
 
-    if cmd == 'balance USDT':
+    if cmd == 'balanceUSDT':
         # balance(ledger_account)
         balance_erc20(ledger_account)
     elif cmd == 'version':
