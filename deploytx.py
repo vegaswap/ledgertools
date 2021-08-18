@@ -1,78 +1,48 @@
-# from brownie import contract
-
-# erc2= Contract.from_abi("erc20", "")
-# from solc import compile_source
 from eth_account import Account
-import solcx
-
 from web3 import Web3
-from web3.types import TxParams
-import utils
+import toml
+import json
 
 ca = Web3.toChecksumAddress
 
 URL = "https://bsc-dataseed.binance.org"
 w3 = Web3(Web3.HTTPProvider(URL))
 
-ercabi = utils.load_abi("./", "erc20")
+def get_contract(ctr_name):
+    with open("%s.json"%ctr_name,"r") as f:
+        b = json.loads(f.read())
+        print (b.keys())
+        abi = b["abi"]
+        bin = b["bytecode"]
 
+    contract = w3.eth.contract(abi=abi, bytecode=bin)
+    return contract
 
-def get_deploy_tx(ledger_account):
-    myadress = ledger_account.address
+def get_deploy_tx(address):
+    ctr_name = "NRT"
+    contract = get_contract(ctr_name)
 
-    contract_source_code = '''
-    pragma solidity ^0.8.5;
-
-    contract Greeter {
-        uint256 public x;
-
-        constructor() {
-            x = 42;
-        }
-
-        function setGreeting(uint256 _x) public {
-            x = _x;
-        }
-
-    }
-    '''
-
-    compiled_sol = solcx.compile_source(contract_source_code)
-    contract_interface = compiled_sol['<stdin>:Greeter']
-
-    contract_ = w3.eth.contract(
-        abi=contract_interface['abi'], bytecode=contract_interface['bin'])
-
-    nonce = w3.eth.getTransactionCount(myadress) #, 'pending')
+    nonce = w3.eth.getTransactionCount(address) #, 'pending')
     # print(acct.address, nonce)
-
-    # est = w3.eth.estimate_gas(tx)
-    # print("EST ", est)
 
     txparams = {
                 # 'from': myadress,
                 # 'to': '',
+                # "gas": 999000,
                 'nonce': nonce,
-                "gas": 140000,
                 "gasPrice": w3.toWei('5', 'gwei')}
-    tx = contract_.constructor().buildTransaction(txparams)
-    print(tx)
+    tx = contract.constructor("VegaNRT", "Seed").buildTransaction(txparams)
+    # print(tx)
+
+    est = w3.eth.estimate_gas(tx)
+    print("estimated gas ", est)
+    #add some gas just in case
+    use_gas = int(est*1.2)
+    txparams["gas"] = use_gas
+    tx = contract.constructor("VegaNRT", "Seed").buildTransaction(txparams)
+    # print(tx)
 
     return tx
-
-
-def pushtx(signedtx):
-    result = w3.eth.sendRawTransaction(signedtx.rawTransaction)
-    rh = result.hex()
-    print('result ', rh)
-
-    tx_receipt = w3.eth.waitForTransactionReceipt(rh)
-    print('status ', tx_receipt['status'])
-    print('blockNumber ', tx_receipt['blockNumber'])
-    print('gasUsed ', tx_receipt['gasUsed'])
-    # contractAddress
-    # cumulativeGasUsed
-
 
 if __name__ == "__main__":
     from pathlib import Path
@@ -85,20 +55,13 @@ if __name__ == "__main__":
 
     account = Account()
     acct = account.privateKeyToAccount(pk)
+    addr = acct.address
+    print (addr)
 
-    tx = get_deploy_tx()
+    # myadress = ledger_account.address
+    tx = get_deploy_tx(addr)
 
-    signedtx = w3.eth.account.signTransaction(tx, pk)
-    print(signedtx)
-    w3.eth.sendRawTransaction(signedtx.rawTransaction)
-    pushtx(signedtx)
-
-    account = Account()
-    acct = account.privateKeyToAccount(pk)
-
-    tx = get_deploy_tx()
-
-    signedtx = w3.eth.account.signTransaction(tx, pk)
-    print(signedtx)
-    w3.eth.sendRawTransaction(signedtx.rawTransaction)
-    pushtx(signedtx)
+    # signedtx = w3.eth.account.signTransaction(tx, pk)
+    # print(signedtx)
+    # w3.eth.sendRawTransaction(signedtx.rawTransaction)
+    # pushtx(signedtx)
