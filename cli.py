@@ -16,6 +16,7 @@ from account import LedgerAccount
 from ledger_usb import *
 import transact_bsc
 import transact_eth
+import transact_bsctest
 
 logger.configure(**logutils.logconfig)
 
@@ -100,11 +101,15 @@ def check_critical():
         sys.exit(0)
 
 
-def get_transactor(ntwk, builddir, whitelist):
+def get_transactor(ntwk, myaddr, builddir, whitelist):
+    #map dynamically
     if ntwk == "ETH":
-        transactor = transact_eth.Transactor(log, logcrit, builddir, whitelist)
+        transactor = transact_eth.Transactor(myaddr, log, logcrit, builddir, whitelist)
     elif ntwk == "BSC":
-        transactor = transact_bsc.Transactor(log, logcrit, builddir, whitelist)
+        transactor = transact_bsc.Transactor(myaddr ,log, logcrit, builddir, whitelist)
+    elif ntwk == "BSCTEST":
+        print (whitelist)
+        transactor = transact_bsctest.Transactor(myaddr, log, logcrit, builddir, whitelist)
     else:
         logcrit("unknown network")
     return transactor
@@ -127,10 +132,11 @@ def ltools(ctx, aid: int, chain: str):
         # sys.exit(0)
 
     builddir = cfg["builddir"]
+    print ("builddir ", builddir)
 
     if chain == None:
-        ntwk = cfg["network"]
-        chain = ntwk
+        chain = cfg["network"]
+        logcrit(f"selected chain {chain}")
         # logcrit("invalid chain passed")
         # sys.exit(1)
 
@@ -139,10 +145,11 @@ def ltools(ctx, aid: int, chain: str):
         x = f.read()
         whitelist = json.loads(x)
 
-    transactor = get_transactor(chain, builddir, whitelist)
 
     logger.debug(f"main {ctx} {aid}")
     ledger_account = get_ledger(aid)
+    myaddr = ledger_account.address
+    transactor = get_transactor(chain, myaddr, builddir, whitelist)
 
     ctx.obj["ledger_account"] = ledger_account
     ctx.obj["transactor"] = transactor
@@ -366,6 +373,8 @@ def version(ctx):
     log("version")
     log(f"{ctx.obj['ledger_account'].get_version()}")
 
+def cli():
+    ltools(obj={})
 
 if __name__ == "__main__":
     log("start")

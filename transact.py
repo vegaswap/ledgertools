@@ -9,36 +9,20 @@ from web3.middleware import geth_poa_middleware
 import os
 
 
-from transact import ATransactor
-
-class Transactor(ATransactor):
-    def __init__(self):
+class ATransactor:
+    def __init__(self) -> None:
         self.pushactive = False
         self.w3 = self.get_w3()
-        self.chainId = 1
-        self.gasPrice = 25000 * 10 ** 6
-        self.USDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
-        self.USDT_DECIMALS = 6
-        self.name_currency = "ETH"
-        self.bnb_dec = 18
-        try:
-            INFURA_KEY = os.getenv("INFURA_KEY")
-        except:
-            print("infura key not set")        
-        self.URL = "https://mainnet.infura.io/v3/" + INFURA_KEY
-
-    def get_w3(self):
-        w3 = Web3(Web3.HTTPProvider(self.URL))
-        # w3.middleware_onion.inject(geth_poa_middleware, layer=0)
-        return w3
-
-    def write_abi(self, name, contract_address):
-        raise Exception("not supported")
+        # self.chainId = 1
+        # self.gasPrice = 25000 * 10 ** 6
+        # self.USDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
+        # self.USDT_DECIMALS = 6
+        # self.name_currency = "ETH"
+        # self.bnb_dec = 18
 
     def get_contract_json(self, ctr_name):
         """load w3 contract from brownie json format"""
-        wdir = "./build"
-        with open("%s/%s.json" % (wdir, ctr_name), "r") as f:
+        with open("%s/%s.json" % (self.builddir, ctr_name), "r") as f:
             b = json.loads(f.read())
             print(b.keys())
             abi = b["abi"]
@@ -57,14 +41,12 @@ class Transactor(ATransactor):
 
     def load_abi(self, name):
         """load an abi file"""
-        wdir = "./build"
-        p = "%s/%s.abi" % (wdir, name)
+        p = "%s/%s.abi" % (self.builddir, name)
         with open(p, "r") as f:
             return f.read()
 
     def load_bin(self, name):
-        wdir = "./build"
-        p = "%s/%s.bin" % (wdir, name)
+        p = "%s/%s.bin" % (self.builddir, name)
         with open(p, "r") as f:
             return f.read()
 
@@ -77,9 +59,23 @@ class Transactor(ATransactor):
     def ethbal(self, addr):
         return self.w3.eth.getBalance(addr)
 
-    def get_nonce(self, myaddr):
-        nonce = self.w3.eth.getTransactionCount(myaddr)
+    def get_nonce(self, addr):
+        nonce = self.w3.eth.getTransactionCount(addr)
         return nonce
+        # nonce = self.w3.eth.getTransactionCount(address)  # , 'pending')
+
+    def get_send_tx(self, myaddr, to_address, sendamount):
+        nonce = self.get_nonce(myaddr)
+        # dont add from field
+        txd = {
+            "chainId": self.chainId,
+            "to": to_address,
+            "value": sendamount,
+            "gas": self.mingas,
+            "gasPrice": self.gasPrice,
+            "nonce": nonce,
+        }
+        return txd
 
     def pushtx(self, signedtx, log):
         if self.pushactive:
@@ -92,7 +88,9 @@ class Transactor(ATransactor):
             log(f"status: {tx_receipt['status']}")
             log(f"blockNumber: {tx_receipt['blockNumber']}")
             log(f"gasUsed: {tx_receipt['gasUsed']}")
-
+            # contractAddress
+            # cumulativeGasUsed
             return tx_receipt
         else:
             log("push not activated")
+            
