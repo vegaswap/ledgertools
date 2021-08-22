@@ -10,9 +10,11 @@ import os
 
 
 class ATransactor:
-    def __init__(self) -> None:
+    def __init__(self, log, logcrit):
         self.pushactive = False
-        self.w3 = self.get_w3()
+        self.log = log
+        self.logcrit = logcrit
+        # self.w3 = self.get_w3()
         # self.chainId = 1
         # self.gasPrice = 25000 * 10 ** 6
         # self.USDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
@@ -75,22 +77,29 @@ class ATransactor:
             "gasPrice": self.gasPrice,
             "nonce": nonce,
         }
+        self.log(f"txd {txd}")
         return txd
 
-    def pushtx(self, signedtx, log):
+    def pushtx(self, signedtx):
         if self.pushactive:
-            log(f"push tx {signedtx.rawTransaction}")
-            result = self.w3.eth.sendRawTransaction(signedtx.rawTransaction)
+            self.log(f"push tx {signedtx.rawTransaction}")
+            try:
+                result = self.w3.eth.sendRawTransaction(signedtx.rawTransaction)
+            except Exception as e:
+                #ValueError: {'code': -32000, 'message': 'transaction underpriced'}
+                self.logcrit(f"{e}")
+                return
+                
             rh = result.hex()
-            log(f"txhash {rh}")
+            self.log(f"txhash {rh}")
 
             tx_receipt = self.w3.eth.waitForTransactionReceipt(rh)
-            log(f"status: {tx_receipt['status']}")
-            log(f"blockNumber: {tx_receipt['blockNumber']}")
-            log(f"gasUsed: {tx_receipt['gasUsed']}")
+            self.log(f"status: {tx_receipt['status']}")
+            self.log(f"blockNumber: {tx_receipt['blockNumber']}")
+            self.log(f"gasUsed: {tx_receipt['gasUsed']}")
             # contractAddress
             # cumulativeGasUsed
             return tx_receipt
         else:
-            log("push not activated")
+            self.log("push not activated")
             

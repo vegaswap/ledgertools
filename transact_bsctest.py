@@ -13,13 +13,14 @@ from transact import ATransactor
 
 class Transactor(ATransactor):
     def __init__(self, myaddr, log, logcrit, builddir, whitelist):
+        super().__init__(log, logcrit)
         self.pushactive = False
         self.chainId = 97
         self.name = "BSCTEST"
         self.URL = "https://data-seed-prebsc-1-s1.binance.org:8545"
         self.w3 = self.get_w3()
         # self.gasPrice = 5000 * 10 ** 6
-        self.gasPrice = self.w3.toWei("5", "gwei")
+        self.gasPrice = self.w3.toWei("10", "gwei")
         # self.USDT = "0x55d398326f99059fF775485246999027B3197955"
         # BUSD = "0x8301F2213c0eeD49a7E28Ae4c3e91722919B8B47"
         self.USDT = "0xA11c8D9DC9b66E209Ef60F0C8D969D3CD988782c"
@@ -27,8 +28,8 @@ class Transactor(ATransactor):
         self.USDT_DECIMALS = 6
         self.name_currency = "BNB"
         self.bnb_dec = 18
-        self.log = log
-        self.logcrit = logcrit
+        # self.log = log
+        # self.logcrit = logcrit
         self.builddir = builddir
         self.mingas = 21000
         self.whitelist = whitelist
@@ -54,11 +55,12 @@ class Transactor(ATransactor):
 
     def send_erc20(self, USD_amount, to_address, nonce):
         self.log(f"send_erc20 {USD_amount} {to_address}")
-        amountDEC = USD_amount * 10 ** self.USDT_DECIMALS
+        amountDEC = int(USD_amount * 10 ** self.USDT_DECIMALS)
         self.log(f"send_erc20 dec: {amountDEC} {to_address}")
 
         ercabi = self.load_abi("erc20")
         ctr = self.load_contract(self.USDT, ercabi)
+        self.log(f"contract {self.USDT}")
         self.log(f"erc contract {ctr.functions.name().call()}")
         self.log(f"erc Decimals {ctr.functions.decimals().call()}")
 
@@ -72,6 +74,10 @@ class Transactor(ATransactor):
             "gasPrice": self.gasPrice,
             "nonce": nonce,
         }
+
+        self.log(f"tx_params {tx_params}")
+        self.log(f"to_address {to_address}")
+        self.log(f"amountDEC {amountDEC}")
 
         btx = ctr.functions.transfer(to_address, amountDEC).buildTransaction(tx_params)
         return btx

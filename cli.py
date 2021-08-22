@@ -238,7 +238,7 @@ def send_tx(ledger_account, transactor, sendamount, to_address):
     try:
         signedtx = ledger_account.signTransaction(txd)
         log(signedtx)
-        transactor.pushtx(signedtx, log)
+        transactor.pushtx(signedtx)
     except LedgerUsbException:
         # if LedgerUsbException.status == "User declined on device":
         #     logcrit("you declined")
@@ -251,6 +251,7 @@ def send_tx(ledger_account, transactor, sendamount, to_address):
 @click.option("--amount", help="amount", type=float)
 @click.option("--to", help="address")
 def sendmoney(ctx, amount, to):
+    toaddrLabel = to
     if amount > 1:
         logcrit("amount too large")
         sys.exit(1)
@@ -263,7 +264,7 @@ def sendmoney(ctx, amount, to):
     activate_push(txr)
 
     # TODO check high amounts
-    if to in txr.whitelist.keys():
+    if toaddrLabel in txr.whitelist.keys():
         addr = txr.whitelist[to]
         send_tx(ledger_account, txr, amountDEC, addr)
     else:
@@ -272,11 +273,12 @@ def sendmoney(ctx, amount, to):
 
 @ltools.command()
 @click.pass_context
-@click.option("--amount", help="amount", type=int)
-@click.option("--to", help="address")
-def sendusdt(ctx, amount, toaddrLabel):
+@click.option("--amount", help="amount", type=float)
+@click.option("--to", help="address", type=str)
+def sendusdt(ctx, amount, to):
     # amounts are treated as nondecimals i.e. 1 = 1 USDT
     # decimals are handled on the transactor level
+    toaddrLabel = to
     logger.debug(f"send usdt {amount} {toaddrLabel}")
     ledger_account = ctx.obj["ledger_account"]
     transactor = ctx.obj["transactor"]
@@ -289,14 +291,15 @@ def sendusdt(ctx, amount, toaddrLabel):
     # can only send to whitelisted addresses
     if toaddrLabel in transactor.whitelist.keys():
         toaddr = transactor.whitelist[toaddrLabel]
+        print(f"toaddr {toaddr}")
         txr = ctx.obj["transactor"]
         myaddr = ledger_account.address
         nonce = txr.get_nonce(myaddr)
         btx = txr.send_erc20(amount, toaddr, nonce)
         signedtx = ledger_account.signTransaction(btx)
         log(f"signedtx {signedtx}")
-        # activate_push(transactor)
-        # pushtx(signedtx, log)
+        activate_push(transactor)
+        transactor.pushtx(signedtx)
 
     else:
         logcrit("address not whitelisted")
@@ -345,7 +348,7 @@ def deploy(ctx, contractname):
 
     log(f"signedtx {signedtx}")
     activate_push(transactor)
-    tx_receipt = transactor.pushtx(signedtx, log)
+    tx_receipt = transactor.pushtx(signedtx)
     # log(tx_receipt)
     if tx_receipt["status"] == 1:
         log(f"deploy success {tx_receipt}")

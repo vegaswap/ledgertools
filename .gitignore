@@ -1,10 +1,9 @@
 __pycache__/
 *config.yaml
-whitelist.py
 *.log
 .env
 *.csv
-whitelist.json
+whitelist*.json
 account_tester.py
 dist/
 ledgertools.egg-info/
