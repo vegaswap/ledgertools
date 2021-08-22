@@ -1,0 +1,4 @@
+builddir: ./
+network: BSC
+accountid: 0
+maxused: 3
