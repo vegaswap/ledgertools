@@ -8,7 +8,6 @@ import json
 from web3.middleware import geth_poa_middleware
 import sys
 
-
 from transact import ATransactor
 
 class Transactor(ATransactor):
@@ -28,8 +27,6 @@ class Transactor(ATransactor):
         self.USDT_DECIMALS = 6
         self.name_currency = "BNB"
         self.bnb_dec = 18
-        # self.log = log
-        # self.logcrit = logcrit
         self.builddir = builddir
         self.mingas = 21000
         self.whitelist = whitelist
@@ -52,6 +49,18 @@ class Transactor(ATransactor):
         abi = response.json()["result"]
         with open("%s.abi" % name, "w") as f:
             f.write(abi)
+
+    def buildTx(self):
+        nonce = self.get_nonce(self.myaddr)
+
+        tx_params = {
+            "chainId": self.chainId,
+            "value": 0,
+            "gas": 50000,
+            "gasPrice": self.gasPrice,
+            "nonce": nonce,
+        }
+        return tx_params
 
     def send_erc20(self, USD_amount, to_address, nonce):
         self.log(f"send_erc20 {USD_amount} {to_address}")
@@ -82,7 +91,8 @@ class Transactor(ATransactor):
         btx = ctr.functions.transfer(to_address, amountDEC).buildTransaction(tx_params)
         return btx
 
-    def get_deploy_tx(self, w3_contract):
+    def get_deploy_tx(self, w3_contract, *constructargs):
+        print (constructargs)
         
         nonce = self.get_nonce(self.myaddr)
         # print(acct.address, nonce)
@@ -94,7 +104,8 @@ class Transactor(ATransactor):
             "nonce": nonce,
             "gasPrice": self.gasPrice,
         }
-        tx = w3_contract.constructor().buildTransaction(txparams)
+        cargs = "NRTSeed", "NRTS", "Seed"
+        tx = w3_contract.constructor(*cargs).buildTransaction(txparams)
         # print(tx)
 
         est = self.w3.eth.estimate_gas(tx)
@@ -102,7 +113,7 @@ class Transactor(ATransactor):
         # add some gas just in case
         use_gas = int(est * 1.2)
         txparams["gas"] = use_gas
-        tx = w3_contract.constructor().buildTransaction(txparams)
+        tx = w3_contract.constructor(*cargs).buildTransaction(txparams)
         # print(tx)
 
         return tx

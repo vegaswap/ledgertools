@@ -7,6 +7,8 @@ import json
 from web3.middleware import geth_poa_middleware
 
 import os
+import sys
+
 
 
 class ATransactor:
@@ -22,6 +24,20 @@ class ATransactor:
         # self.name_currency = "ETH"
         # self.bnb_dec = 18
 
+    def activate_push(self):
+        self.logcrit(f"ACTIVATE PUSH")
+        self.logcrit(f"YES/NO (Y/N)")
+        yesno = input()
+        if yesno == "Y":
+            self.logcrit(f"PROCEED")
+            self.pushactive = True
+        elif yesno == "N":
+            self.logcrit(f"dont proceed")
+            sys.exit(0)
+        else:
+            self.logcrit(f"dont proceed")
+            sys.exit(0)
+            
     def get_contract_json(self, ctr_name):
         """load w3 contract from brownie json format"""
         with open("%s/%s.json" % (self.builddir, ctr_name), "r") as f:
@@ -102,4 +118,22 @@ class ATransactor:
             return tx_receipt
         else:
             self.log("push not activated")
-            
+
+
+import transact_bsc
+import transact_eth
+import transact_bsctest
+
+
+def get_transactor(ntwk, myaddr, builddir, whitelist, log, logcrit):
+    #map dynamically
+    if ntwk == "ETH":
+        transactor = transact_eth.Transactor(myaddr, log, logcrit, builddir, whitelist)
+    elif ntwk == "BSC":
+        transactor = transact_bsc.Transactor(myaddr ,log, logcrit, builddir, whitelist)
+    elif ntwk == "BSCTEST":
+        print (whitelist)
+        transactor = transact_bsctest.Transactor(myaddr, log, logcrit, builddir, whitelist)
+    else:
+        logcrit("unknown network")
+    return transactor

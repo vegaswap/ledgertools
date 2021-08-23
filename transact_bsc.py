@@ -8,14 +8,14 @@ import json
 from web3.middleware import geth_poa_middleware
 import sys
 
-
 from transact import ATransactor
 
 class Transactor(ATransactor):
     def __init__(self, myaddr, log, logcrit, builddir, whitelist):
         self.pushactive = False
-        self.w3 = self.get_w3()
         self.chainId = 56
+        self.URL = "https://bsc-dataseed.binance.org"
+        self.w3 = self.get_w3()
         # self.gasPrice = 5000 * 10 ** 6
         self.gasPrice = self.w3.toWei("5", "gwei")
         self.USDT = "0x55d398326f99059fF775485246999027B3197955"
@@ -27,7 +27,7 @@ class Transactor(ATransactor):
         self.builddir = builddir
         self.mingas = 21000
         self.whitelist = whitelist
-        self.URL = "https://bsc-dataseed.binance.org"
+        
         self.myaddr = myaddr
 
     def get_w3(self):

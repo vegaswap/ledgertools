@@ -14,9 +14,10 @@ import hashlib
 import logutils
 from account import LedgerAccount
 from ledger_usb import *
-import transact_bsc
-import transact_eth
-import transact_bsctest
+import transact
+# import transact_bsc
+# import transact_eth
+# import transact_bsctest
 
 logger.configure(**logutils.logconfig)
 
@@ -24,27 +25,12 @@ logger.configure(**logutils.logconfig)
 # util functions until click logging is hooked up to file log
 def log(s1):
     logger.info(f"{s1}")
-    # click.secho(s1, fg="green")
-
 
 def logcrit(s1):
     logger.warning(f"{s1}")
-    # click.secho(s1, bg="black", fg="red")
 
 
-def activate_push(txr):
-    logcrit(f"ACTIVATE PUSH")
-    logcrit(f"YES/NO (Y/N)")
-    yesno = input()
-    if yesno == "Y":
-        logcrit(f"PROCEED")
-        txr.pushactive = True
-    elif yesno == "N":
-        logcrit(f"dont proceed")
-        sys.exit(0)
-    else:
-        logcrit(f"dont proceed")
-        sys.exit(0)
+
 
 
 def confirm_msg(msg):
@@ -101,18 +87,6 @@ def check_critical():
         sys.exit(0)
 
 
-def get_transactor(ntwk, myaddr, builddir, whitelist):
-    #map dynamically
-    if ntwk == "ETH":
-        transactor = transact_eth.Transactor(myaddr, log, logcrit, builddir, whitelist)
-    elif ntwk == "BSC":
-        transactor = transact_bsc.Transactor(myaddr ,log, logcrit, builddir, whitelist)
-    elif ntwk == "BSCTEST":
-        print (whitelist)
-        transactor = transact_bsctest.Transactor(myaddr, log, logcrit, builddir, whitelist)
-    else:
-        logcrit("unknown network")
-    return transactor
 
 
 @click.group()
@@ -149,7 +123,7 @@ def ltools(ctx, aid: int, chain: str):
     logger.debug(f"main {ctx} {aid}")
     ledger_account = get_ledger(aid)
     myaddr = ledger_account.address
-    transactor = get_transactor(chain, myaddr, builddir, whitelist)
+    transactor = transact.get_transactor(chain, myaddr, builddir, whitelist, log, logcrit)
 
     ctx.obj["ledger_account"] = ledger_account
     ctx.obj["transactor"] = transactor
@@ -261,7 +235,7 @@ def sendmoney(ctx, amount, to):
     amountDEC = int(amount * 10 ** txr.bnb_dec)
 
     log(f"send {txr.name_currency} amount: {amount} amountDEC: {amountDEC} to: {to}")
-    activate_push(txr)
+    txr.activate_push()
 
     # TODO check high amounts
     if toaddrLabel in txr.whitelist.keys():
@@ -298,7 +272,7 @@ def sendusdt(ctx, amount, to):
         btx = txr.send_erc20(amount, toaddr, nonce)
         signedtx = ledger_account.signTransaction(btx)
         log(f"signedtx {signedtx}")
-        activate_push(transactor)
+        transactor.activate_push()
         transactor.pushtx(signedtx)
 
     else:
@@ -320,7 +294,7 @@ def deploy(ctx, contractname):
 
     transactor = ctx.obj["transactor"]
     w3_contract = transactor.get_contract(contractname)
-    wdir = "./build"
+    wdir = transactor.builddir
     p = "%s/%s.abi" % (wdir, contractname)
     msg = f"abi sha1 hash {sha256sum(p)}"
     confirm_msg(msg)
@@ -332,13 +306,14 @@ def deploy(ctx, contractname):
 
     ledger_account = ctx.obj["ledger_account"]
     myaddr = ledger_account.address
-    msg = f"deploytx {contractname} from {myaddr}"
+    ch = ctx.obj["chain"]
+    msg = f"deploytx {contractname} from {myaddr} ({ch})"
     logcrit(msg)
     confirm_msg(msg)
-    tx = transactor.get_deploy_tx(myaddr, w3_contract)
+    #TODO pass constructor args
+    cargs = "NRTSeed", "NRTS", "Seed"
+    tx = transactor.get_deploy_tx(w3_contract, cargs)
     log(tx)
-
-    log("confirm hash of contract bin!")
 
     try:
         signedtx = ledger_account.signTransaction(tx)
@@ -347,7 +322,7 @@ def deploy(ctx, contractname):
         sys.exit(1)
 
     log(f"signedtx {signedtx}")
-    activate_push(transactor)
+    transactor.activate_push()
     tx_receipt = transactor.pushtx(signedtx)
     # log(tx_receipt)
     if tx_receipt["status"] == 1:
@@ -359,6 +334,11 @@ def deploy(ctx, contractname):
     else:
         logcrit(f"deploy failed {tx_receipt}")
 
+# @ltools.command()
+# @click.option("--contractname", help="the name of the contract")
+# @click.option("--function", help="the name of the function to call")
+# @click.pass_context
+# def transact(ctx, contractname, function):
 
 @ltools.command()
 @click.pass_context
