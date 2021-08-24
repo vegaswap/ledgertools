@@ -63,15 +63,15 @@ class Transactor(ATransactor):
         return tx_params
 
     def send_erc20(self, USD_amount, to_address, nonce):
-        self.log(f"send_erc20 {USD_amount} {to_address}")
+        # self.log(f"send_erc20 {USD_amount} {to_address}")
         amountDEC = int(USD_amount * 10 ** self.USDT_DECIMALS)
-        self.log(f"send_erc20 dec: {amountDEC} {to_address}")
+        # self.log(f"send_erc20 dec: {amountDEC} {to_address}")
 
         ercabi = self.load_abi("erc20")
         ctr = self.load_contract(self.USDT, ercabi)
-        self.log(f"contract {self.USDT}")
-        self.log(f"erc contract {ctr.functions.name().call()}")
-        self.log(f"erc Decimals {ctr.functions.decimals().call()}")
+        # self.log(f"contract {self.USDT}")
+        # self.log(f"erc contract {ctr.functions.name().call()}")
+        # self.log(f"erc Decimals {ctr.functions.decimals().call()}")
 
         bnbvalue = 0
 
@@ -79,14 +79,14 @@ class Transactor(ATransactor):
             "chainId": self.chainId,
             # "to": to_address,
             "value": bnbvalue,
-            "gas": 50000,
+            "gas": 70000,
             "gasPrice": self.gasPrice,
             "nonce": nonce,
         }
 
-        self.log(f"tx_params {tx_params}")
-        self.log(f"to_address {to_address}")
-        self.log(f"amountDEC {amountDEC}")
+        # self.log(f"tx_params {tx_params}")
+        # self.log(f"to_address {to_address}")
+        # self.log(f"amountDEC {amountDEC}")
 
         btx = ctr.functions.transfer(to_address, amountDEC).buildTransaction(tx_params)
         return btx

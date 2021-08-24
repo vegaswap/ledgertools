@@ -10,29 +10,31 @@ import sys
 import yaml
 import json
 import hashlib
-from loguru import logger
-import logutils
+
+# from loguru import logger
+import logutil_ntwk
 from account import LedgerAccount, get_ledger
 from ledger_usb import *
 import transact
 
-logger.configure(**logutils.logconfig)
+import log
 
 
+# logger.configure(**logutil_ntwk.get_config(""))
 # util functions until click logging is hooked up to file log
 
 
 def confirm_msg(msg):
-    logger.warning(f"confirm {msg}")
-    logger.warning(f"YES/NO (Y/N)")
+    log.warn(f"confirm {msg}")
+    log.warn(f"YES/NO (Y/N)")
     yesno = input()
     if yesno == "Y":
-        logger.warning(f"PROCEED")
+        log.warn(f"PROCEED")
     elif yesno == "N":
-        logger.warning(f"dont proceed")
+        log.warn(f"dont proceed")
         sys.exit(0)
     else:
-        logger.warning(f"dont proceed")
+        log.warn(f"dont proceed")
         sys.exit(0)
 
 
@@ -48,16 +50,16 @@ def sha256sum(filename):
 
 
 def check_critical():
-    logger.warning(f"PERFORMING CRITICAL TASKS")
-    logger.warning(f"YES/NO (Y/N)")
+    log.warn(f"PERFORMING CRITICAL TASKS")
+    log.warn(f"YES/NO (Y/N)")
     yesno = input()
     if yesno == "Y":
-        logger.warning(f"PROCEED")
+        log.warn(f"PROCEED")
     elif yesno == "N":
-        logger.warning(f"dont proceed")
+        log.warn(f"dont proceed")
         sys.exit(0)
     else:
-        logger.warning(f"dont proceed")
+        log.warn(f"dont proceed")
         sys.exit(0)
 
 
@@ -74,7 +76,7 @@ def ltools(ctx, aid: int, chain: str):
         aid = int(aid)
     except:
         aid = cfg["accountID"]
-        # logger.warning(f"account id has to be an integer")
+        # log.warn(f"account id has to be an integer")
         # sys.exit(0)
 
     builddir = cfg["builddir"]
@@ -82,9 +84,16 @@ def ltools(ctx, aid: int, chain: str):
 
     if chain == None:
         chain = cfg["network"]
-        logger.warning(f"selected chain {chain}")
-        # logger.warning("invalid chain passed")
+        # log.warn("invalid chain passed")
         # sys.exit(1)
+
+    il = logutil_ntwk.Loglevel(chain)
+
+    log.info = il.info
+    log.warn = il.warn
+    log.warn(f"selected chain {chain}")
+
+    # log.info("??")
 
     # globals()["NTWK"] = chain
     # logger.configure(**logutils.get_config(chain))
@@ -94,7 +103,7 @@ def ltools(ctx, aid: int, chain: str):
         x = f.read()
         whitelist = json.loads(x)
 
-    logger.debug(f"main {ctx} {aid}")
+    log.info(f"main {ctx} {aid}")
     ledger_account = get_ledger(aid)
     myaddr = ledger_account.address
     transactor = transact.get_transactor(chain, myaddr, builddir, whitelist)
@@ -114,7 +123,7 @@ def show_balance_token(transactor, addr, token_address):
     DEC = transactor.USDT_DECIMALS
     bd = b / 10 ** DEC
     s1 = f"{name}: {bd} ({sym})"
-    logger.info(s1)
+    log.info(s1)
     return bd
 
 
@@ -134,64 +143,64 @@ def balance(ctx):
     txr = ctx.obj["transactor"]
     bnb_bal = txr.ethbal(myaddr)
 
-    logger.info(f"BNB {bnb_bal/10**18}")
+    log.info(f"BNB {bnb_bal/10**18}")
 
 
 @ltools.command()
 @click.pass_context
 def showwhitelist(ctx):
-    logger.info("whitelist")
+    log.info("whitelist")
     txr = ctx.obj["transactor"]
     for k, v in txr.whitelist.items():
-        logger.info(f"{k}: {v}")
+        log.info(f"{k}: {v}")
 
 
 @ltools.command()
 @click.pass_context
 def listaccounts(ctx):
-    logger.debug(f"list accounts")
+    log.info(f"list accounts")
     ledger_account = ctx.obj["ledger_account"]
     for i in range(3):
         addr = ledger_account.get_address(i)
-        logger.info(f"addr:  {addr}")
+        log.info(f"addr:  {addr}")
 
 
 @ltools.command()
 @click.pass_context
 def listall(ctx):
-    logger.debug(f"listall")
+    log.info(f"listall")
     ledger_account = ctx.obj["ledger_account"]
     txr = ctx.obj["transactor"]
     # with open("balances_%s.csv"%ctx.obj["chain"], "w") as f:
     for i in range(ctx.obj["maxused"]):
         addr = ledger_account.get_address(i)
-        logger.info(f"addr:\t{addr} (accountID: {i})")
+        log.info(f"addr:\t{addr} (accountID: {i})")
         txr = ctx.obj["transactor"]
         bnb_bal = txr.ethbal(addr)
         bnb_bal_dec = bnb_bal / 10 ** txr.bnb_dec
         s2 = f"{txr.name_currency} {bnb_bal_dec}"
-        logger.info(s2)
+        log.info(s2)
         b = show_balance_token(txr, addr, txr.USDT)
-        logger.info(f"---------")
+        log.info(f"---------")
         # f.write(f"{addr},{txr.name_currency},{str(bnb_bal_dec)}\n")
         # f.write(f"{addr},USDT,{str(b)}\n")
 
 
 def send_tx(ledger_account, transactor, sendamount, to_address):
     myaddr = ledger_account.address
-    logger.debug(f"send_tx {sendamount} {to_address} from: {myaddr}")
+    log.info(f"send_tx {sendamount} {to_address} from: {myaddr}")
     txd = transactor.get_send_tx(myaddr, to_address, sendamount)
 
     try:
-        logger.info("sign...")
+        log.info("sign...")
         signedtx = ledger_account.signTransaction(txd)
-        logger.info(signedtx)
+        log.info(signedtx)
         transactor.pushtx(signedtx)
     except LedgerUsbException:
         # if LedgerUsbException.status == "User declined on device":
-        #     logger.warning("you declined")
+        #     log.warn("you declined")
         # else:
-        logger.warning(f"LedgerUsbException {LedgerUsbException}")
+        log.warn(f"LedgerUsbException {LedgerUsbException}")
 
 
 @ltools.command()
@@ -201,21 +210,21 @@ def send_tx(ledger_account, transactor, sendamount, to_address):
 def sendmoney(ctx, amount, to):
     toaddrLabel = to
     if amount > 1:
-        logger.warning("amount too large")
+        log.warn("amount too large")
         sys.exit(1)
 
     txr = ctx.obj["transactor"]
     ledger_account = ctx.obj["ledger_account"]
     amountDEC = int(amount * 10 ** txr.bnb_dec)
     myaddr = ledger_account.address
-    logger.info(
+    log.info(
         f"send {txr.name_currency} amount: {amount} amountDEC: {amountDEC} to: {to} from: {myaddr}"
     )
     txr.activate_push()
 
     bnb_bal = txr.ethbal(myaddr)
     if amountDEC > bnb_bal:
-        logger.warning(f"insufficient balance {bnb_bal}")
+        log.warn(f"insufficient balance {bnb_bal}")
         sys.exit(1)
 
     # TODO check high amounts
@@ -223,7 +232,7 @@ def sendmoney(ctx, amount, to):
         addr = txr.whitelist[to]
         send_tx(ledger_account, txr, amountDEC, addr)
     else:
-        logger.warning(f"address not whitelisted {txr.whitelist}")
+        log.warn(f"address not whitelisted {txr.whitelist}")
 
 
 @ltools.command()
@@ -234,14 +243,14 @@ def sendusdt(ctx, amount, to):
     # amounts are treated as nondecimals i.e. 1 = 1 USDT
     # decimals are handled on the transactor level
     toaddrLabel = to
-    logger.debug(f"send usdt {amount} {toaddrLabel}")
+    log.info(f"send usdt {amount} {toaddrLabel}")
     ledger_account = ctx.obj["ledger_account"]
     transactor = ctx.obj["transactor"]
-    logger.warning(f"send {amount}")
-    logger.warning(f"to  {toaddrLabel}")
+    log.warn(f"send {amount}")
+    log.warn(f"to  {toaddrLabel}")
     maxAmount = 1000
     if amount > maxAmount:
-        logger.warning("higher than max amount")
+        log.warn("higher than max amount")
         sys.exit(1)
     # can only send to whitelisted addresses
     if toaddrLabel in transactor.whitelist.keys():
@@ -250,14 +259,15 @@ def sendusdt(ctx, amount, to):
         txr = ctx.obj["transactor"]
         myaddr = ledger_account.address
         nonce = txr.get_nonce(myaddr)
+
         btx = txr.send_erc20(amount, toaddr, nonce)
         signedtx = ledger_account.signTransaction(btx)
-        logger.info(f"signedtx {signedtx}")
+        log.info(f"signedtx {signedtx}")
         transactor.activate_push()
         transactor.pushtx(signedtx)
 
     else:
-        logger.warning("address not whitelisted")
+        log.warn("address not whitelisted")
 
 
 # def append_deploymap(name, contractAddress):
@@ -268,7 +278,7 @@ def sendusdt(ctx, amount, to):
 @click.pass_context
 def deploy(ctx, contractname):
     if contractname == "" or contractname == None:
-        logger.warning("no contract name provided")
+        log.warn("no contract name provided")
         sys.exit(1)
 
     confirm_msg("deploying contract %s" % contractname)
@@ -289,31 +299,31 @@ def deploy(ctx, contractname):
     myaddr = ledger_account.address
     ch = ctx.obj["chain"]
     msg = f"deploytx {contractname} from {myaddr} ({ch})"
-    logger.warning(msg)
+    log.warn(msg)
     confirm_msg(msg)
     # TODO pass constructor args
     cargs = "NRTSeed", "NRTS", "Seed"
     tx = transactor.get_deploy_tx(w3_contract, cargs)
-    logger.info(tx)
+    log.info(tx)
 
     try:
         signedtx = ledger_account.signTransaction(tx)
     except LedgerExceptionDeclined as e:
-        logger.warning(f"user declined {e}")
+        log.warn(f"user declined {e}")
         sys.exit(1)
 
-    logger.info(f"signedtx {signedtx}")
+    log.info(f"signedtx {signedtx}")
     transactor.activate_push()
     tx_receipt = transactor.pushtx(signedtx)
-    # logger.info(tx_receipt)
+    # log.info(tx_receipt)
     if tx_receipt["status"] == 1:
-        logger.info(f"deploy success {tx_receipt}")
+        log.info(f"deploy success {tx_receipt}")
         contractAddress = tx_receipt["contractAddress"]
-        logger.info(f"deployed to {contractAddress}")
+        log.info(f"deployed to {contractAddress}")
         # append to map of addresses
         # append_deploymap
     else:
-        logger.warning(f"deploy failed {tx_receipt}")
+        log.warn(f"deploy failed {tx_receipt}")
 
 
 # @ltools.command()
@@ -336,8 +346,8 @@ def balancevega(ctx):
 @ltools.command()
 @click.pass_context
 def version(ctx):
-    logger.info("version")
-    logger.info(f"{ctx.obj['ledger_account'].get_version()}")
+    log.info("version")
+    log.info(f"{ctx.obj['ledger_account'].get_version()}")
 
 
 def cli():
@@ -345,5 +355,5 @@ def cli():
 
 
 if __name__ == "__main__":
-    logger.info("start")
+    # log.info("start")
     ltools(obj={})

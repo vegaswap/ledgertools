@@ -9,6 +9,7 @@ from web3.middleware import geth_poa_middleware
 import sys
 
 from transact import ATransactor
+import log
 
 
 class Transactor(ATransactor):
@@ -48,14 +49,15 @@ class Transactor(ATransactor):
             f.write(abi)
 
     def send_erc20(self, USD_amount, to_address, nonce):
-        self.log(f"send_erc20 {USD_amount} {to_address}")
+        log.info(f"send_erc20 {USD_amount} {to_address}")
         amountDEC = USD_amount * 10 ** self.USDT_DECIMALS
-        self.log(f"send_erc20 dec: {amountDEC} {to_address}")
+        amountDEC = int(amountDEC)
+        log.info(f"send_erc20 dec: {amountDEC} {to_address}")
 
         ercabi = self.load_abi("erc20")
         ctr = self.load_contract(self.USDT, ercabi)
-        self.log(f"erc contract {ctr.functions.name().call()}")
-        self.log(f"erc Decimals {ctr.functions.decimals().call()}")
+        log.info(f"erc contract {ctr.functions.name().call()}")
+        log.info(f"erc Decimals {ctr.functions.decimals().call()}")
 
         bnbvalue = 0
 
@@ -63,7 +65,7 @@ class Transactor(ATransactor):
             "chainId": self.chainId,
             # "to": to_address,
             "value": bnbvalue,
-            "gas": 50000,
+            "gas": 70000,
             "gasPrice": self.gasPrice,
             "nonce": nonce,
         }
@@ -74,7 +76,7 @@ class Transactor(ATransactor):
     def get_deploy_tx(self, w3_contract):
 
         nonce = self.get_nonce(self.myaddr)
-        # print(acct.address, nonce)
+        # log.info(acct.address, nonce)
 
         txparams = {
             # 'from': myadress,
@@ -84,14 +86,14 @@ class Transactor(ATransactor):
             "gasPrice": self.gasPrice,
         }
         tx = w3_contract.constructor().buildTransaction(txparams)
-        # print(tx)
+        # log.info(tx)
 
         est = self.w3.eth.estimate_gas(tx)
         # log(f"estimated gas {est}")
         # add some gas just in case
-        use_gas = int(est * 1.2)
+        use_gas = int(est * 1.5)
         txparams["gas"] = use_gas
         tx = w3_contract.constructor().buildTransaction(txparams)
-        # print(tx)
+        # log.info(tx)
 
         return tx
