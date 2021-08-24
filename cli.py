@@ -20,25 +20,19 @@ logger.configure(**logutils.logconfig)
 
 
 # util functions until click logging is hooked up to file log
-def log(s1):
-    logger.info(f"{s1}")
-
-
-def logcrit(s1):
-    logger.warning(f"{s1}")
 
 
 def confirm_msg(msg):
-    logcrit(f"confirm {msg}")
-    logcrit(f"YES/NO (Y/N)")
+    logger.warning(f"confirm {msg}")
+    logger.warning(f"YES/NO (Y/N)")
     yesno = input()
     if yesno == "Y":
-        logcrit(f"PROCEED")
+        logger.warning(f"PROCEED")
     elif yesno == "N":
-        logcrit(f"dont proceed")
+        logger.warning(f"dont proceed")
         sys.exit(0)
     else:
-        logcrit(f"dont proceed")
+        logger.warning(f"dont proceed")
         sys.exit(0)
 
 
@@ -54,16 +48,16 @@ def sha256sum(filename):
 
 
 def check_critical():
-    logcrit(f"PERFORMING CRITICAL TASKS")
-    logcrit(f"YES/NO (Y/N)")
+    logger.warning(f"PERFORMING CRITICAL TASKS")
+    logger.warning(f"YES/NO (Y/N)")
     yesno = input()
     if yesno == "Y":
-        logcrit(f"PROCEED")
+        logger.warning(f"PROCEED")
     elif yesno == "N":
-        logcrit(f"dont proceed")
+        logger.warning(f"dont proceed")
         sys.exit(0)
     else:
-        logcrit(f"dont proceed")
+        logger.warning(f"dont proceed")
         sys.exit(0)
 
 
@@ -79,8 +73,8 @@ def ltools(ctx, aid: int, chain: str):
     try:
         aid = int(aid)
     except:
-        aid = cfg["accountid"]
-        # logcrit(f"account id has to be an integer")
+        aid = cfg["accountID"]
+        # logger.warning(f"account id has to be an integer")
         # sys.exit(0)
 
     builddir = cfg["builddir"]
@@ -88,9 +82,12 @@ def ltools(ctx, aid: int, chain: str):
 
     if chain == None:
         chain = cfg["network"]
-        logcrit(f"selected chain {chain}")
-        # logcrit("invalid chain passed")
+        logger.warning(f"selected chain {chain}")
+        # logger.warning("invalid chain passed")
         # sys.exit(1)
+
+    # globals()["NTWK"] = chain
+    # logger.configure(**logutils.get_config(chain))
 
     wl = cfg["whitelist"]
     with open(wl, "r") as f:
@@ -117,7 +114,7 @@ def show_balance_token(transactor, addr, token_address):
     DEC = transactor.USDT_DECIMALS
     bd = b / 10 ** DEC
     s1 = f"{name}: {bd} ({sym})"
-    log(s1)
+    logger.info(s1)
     return bd
 
 
@@ -137,16 +134,16 @@ def balance(ctx):
     txr = ctx.obj["transactor"]
     bnb_bal = txr.ethbal(myaddr)
 
-    log(f"BNB {bnb_bal/10**18}")
+    logger.info(f"BNB {bnb_bal/10**18}")
 
 
 @ltools.command()
 @click.pass_context
 def showwhitelist(ctx):
-    log("whitelist")
+    logger.info("whitelist")
     txr = ctx.obj["transactor"]
     for k, v in txr.whitelist.items():
-        log(f"{k}: {v}")
+        logger.info(f"{k}: {v}")
 
 
 @ltools.command()
@@ -156,7 +153,7 @@ def listaccounts(ctx):
     ledger_account = ctx.obj["ledger_account"]
     for i in range(3):
         addr = ledger_account.get_address(i)
-        log(f"addr:  {addr}")
+        logger.info(f"addr:  {addr}")
 
 
 @ltools.command()
@@ -168,14 +165,14 @@ def listall(ctx):
     # with open("balances_%s.csv"%ctx.obj["chain"], "w") as f:
     for i in range(ctx.obj["maxused"]):
         addr = ledger_account.get_address(i)
-        log(f"addr:\t{addr} (accountID: {i})")
+        logger.info(f"addr:\t{addr} (accountID: {i})")
         txr = ctx.obj["transactor"]
         bnb_bal = txr.ethbal(addr)
         bnb_bal_dec = bnb_bal / 10 ** txr.bnb_dec
         s2 = f"{txr.name_currency} {bnb_bal_dec}"
-        log(s2)
+        logger.info(s2)
         b = show_balance_token(txr, addr, txr.USDT)
-        log(f"---------")
+        logger.info(f"---------")
         # f.write(f"{addr},{txr.name_currency},{str(bnb_bal_dec)}\n")
         # f.write(f"{addr},USDT,{str(b)}\n")
 
@@ -188,13 +185,13 @@ def send_tx(ledger_account, transactor, sendamount, to_address):
     try:
         logger.info("sign...")
         signedtx = ledger_account.signTransaction(txd)
-        log(signedtx)
+        logger.info(signedtx)
         transactor.pushtx(signedtx)
     except LedgerUsbException:
         # if LedgerUsbException.status == "User declined on device":
-        #     logcrit("you declined")
+        #     logger.warning("you declined")
         # else:
-        logcrit(f"LedgerUsbException {LedgerUsbException}")
+        logger.warning(f"LedgerUsbException {LedgerUsbException}")
 
 
 @ltools.command()
@@ -204,14 +201,16 @@ def send_tx(ledger_account, transactor, sendamount, to_address):
 def sendmoney(ctx, amount, to):
     toaddrLabel = to
     if amount > 1:
-        logcrit("amount too large")
+        logger.warning("amount too large")
         sys.exit(1)
 
     txr = ctx.obj["transactor"]
     ledger_account = ctx.obj["ledger_account"]
     amountDEC = int(amount * 10 ** txr.bnb_dec)
     myaddr = ledger_account.address
-    logger.info(f"send {txr.name_currency} amount: {amount} amountDEC: {amountDEC} to: {to} from: {myaddr}")
+    logger.info(
+        f"send {txr.name_currency} amount: {amount} amountDEC: {amountDEC} to: {to} from: {myaddr}"
+    )
     txr.activate_push()
 
     bnb_bal = txr.ethbal(myaddr)
@@ -238,11 +237,11 @@ def sendusdt(ctx, amount, to):
     logger.debug(f"send usdt {amount} {toaddrLabel}")
     ledger_account = ctx.obj["ledger_account"]
     transactor = ctx.obj["transactor"]
-    logcrit(f"send {amount}")
-    logcrit(f"to  {toaddrLabel}")
+    logger.warning(f"send {amount}")
+    logger.warning(f"to  {toaddrLabel}")
     maxAmount = 1000
     if amount > maxAmount:
-        logcrit("higher than max amount")
+        logger.warning("higher than max amount")
         sys.exit(1)
     # can only send to whitelisted addresses
     if toaddrLabel in transactor.whitelist.keys():
@@ -253,12 +252,12 @@ def sendusdt(ctx, amount, to):
         nonce = txr.get_nonce(myaddr)
         btx = txr.send_erc20(amount, toaddr, nonce)
         signedtx = ledger_account.signTransaction(btx)
-        log(f"signedtx {signedtx}")
+        logger.info(f"signedtx {signedtx}")
         transactor.activate_push()
         transactor.pushtx(signedtx)
 
     else:
-        logcrit("address not whitelisted")
+        logger.warning("address not whitelisted")
 
 
 # def append_deploymap(name, contractAddress):
@@ -269,7 +268,7 @@ def sendusdt(ctx, amount, to):
 @click.pass_context
 def deploy(ctx, contractname):
     if contractname == "" or contractname == None:
-        logcrit("no contract name provided")
+        logger.warning("no contract name provided")
         sys.exit(1)
 
     confirm_msg("deploying contract %s" % contractname)
@@ -290,31 +289,31 @@ def deploy(ctx, contractname):
     myaddr = ledger_account.address
     ch = ctx.obj["chain"]
     msg = f"deploytx {contractname} from {myaddr} ({ch})"
-    logcrit(msg)
+    logger.warning(msg)
     confirm_msg(msg)
     # TODO pass constructor args
     cargs = "NRTSeed", "NRTS", "Seed"
     tx = transactor.get_deploy_tx(w3_contract, cargs)
-    log(tx)
+    logger.info(tx)
 
     try:
         signedtx = ledger_account.signTransaction(tx)
     except LedgerExceptionDeclined as e:
-        logcrit(f"user declined {e}")
+        logger.warning(f"user declined {e}")
         sys.exit(1)
 
-    log(f"signedtx {signedtx}")
+    logger.info(f"signedtx {signedtx}")
     transactor.activate_push()
     tx_receipt = transactor.pushtx(signedtx)
-    # log(tx_receipt)
+    # logger.info(tx_receipt)
     if tx_receipt["status"] == 1:
-        log(f"deploy success {tx_receipt}")
+        logger.info(f"deploy success {tx_receipt}")
         contractAddress = tx_receipt["contractAddress"]
-        log(f"deployed to {contractAddress}")
+        logger.info(f"deployed to {contractAddress}")
         # append to map of addresses
         # append_deploymap
     else:
-        logcrit(f"deploy failed {tx_receipt}")
+        logger.warning(f"deploy failed {tx_receipt}")
 
 
 # @ltools.command()
@@ -337,8 +336,8 @@ def balancevega(ctx):
 @ltools.command()
 @click.pass_context
 def version(ctx):
-    log("version")
-    log(f"{ctx.obj['ledger_account'].get_version()}")
+    logger.info("version")
+    logger.info(f"{ctx.obj['ledger_account'].get_version()}")
 
 
 def cli():
@@ -346,5 +345,5 @@ def cli():
 
 
 if __name__ == "__main__":
-    log("start")
+    logger.info("start")
     ltools(obj={})
