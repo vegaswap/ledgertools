@@ -10,9 +10,10 @@ import sys
 
 from transact import ATransactor
 
+
 class Transactor(ATransactor):
-    def __init__(self, myaddr, log, logcrit, builddir, whitelist):
-        super().__init__(log, logcrit)
+    def __init__(self, myaddr, builddir, whitelist):
+        super().__init__()
         self.pushactive = False
         self.chainId = 97
         self.name = "BSCTEST"
@@ -37,7 +38,6 @@ class Transactor(ATransactor):
         w3.middleware_onion.inject(geth_poa_middleware, layer=0)
         return w3
 
-    
     def write_abi(self, name, contract_address):
         response = requests.get(
             f"https://api.bscscan.com/api?"
@@ -56,7 +56,7 @@ class Transactor(ATransactor):
         tx_params = {
             "chainId": self.chainId,
             "value": 0,
-            "gas": 50000,
+            "gas": 200000,
             "gasPrice": self.gasPrice,
             "nonce": nonce,
         }
@@ -92,8 +92,8 @@ class Transactor(ATransactor):
         return btx
 
     def get_deploy_tx(self, w3_contract, *constructargs):
-        print (constructargs)
-        
+        print(constructargs)
+
         nonce = self.get_nonce(self.myaddr)
         # print(acct.address, nonce)
 
@@ -117,5 +117,3 @@ class Transactor(ATransactor):
         # print(tx)
 
         return tx
-
-    

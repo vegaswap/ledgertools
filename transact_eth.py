@@ -4,22 +4,22 @@ transact wrapper to isolate the network
 
 from web3 import Web3
 import json
-from web3.middleware import geth_poa_middleware
 
 import os
 
 
 from transact import ATransactor
 
+
 class Transactor(ATransactor):
-    def __init__(self, myaddr, log, logcrit, builddir, whitelist):
+    def __init__(self, myaddr, builddir, whitelist):
         self.pushactive = False
         self.chainId = 1
         self.gasPrice = 25000 * 10 ** 6
         try:
             INFURA_KEY = os.getenv("INFURA_KEY")
         except:
-            print("infura key not set")        
+            print("infura key not set")
         self.URL = "https://mainnet.infura.io/v3/" + INFURA_KEY
         self.w3 = self.get_w3()
 
@@ -28,7 +28,6 @@ class Transactor(ATransactor):
         self.name_currency = "ETH"
         self.bnb_dec = 18
         self.builddir = builddir
-        
 
     def get_w3(self):
         w3 = Web3(Web3.HTTPProvider(self.URL))

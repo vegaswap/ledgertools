@@ -10,9 +10,11 @@ import sys
 
 from transact import ATransactor
 
+
 class Transactor(ATransactor):
-    def __init__(self, myaddr, log, logcrit, builddir, whitelist):
+    def __init__(self, myaddr, builddir, whitelist):
         self.pushactive = False
+        self.name = "BSC"
         self.chainId = 56
         self.URL = "https://bsc-dataseed.binance.org"
         self.w3 = self.get_w3()
@@ -22,19 +24,17 @@ class Transactor(ATransactor):
         self.USDT_DECIMALS = 18
         self.name_currency = "BNB"
         self.bnb_dec = 18
-        self.log = log
-        self.logcrit = logcrit
         self.builddir = builddir
         self.mingas = 21000
         self.whitelist = whitelist
-        
+
         self.myaddr = myaddr
 
     def get_w3(self):
         w3 = Web3(Web3.HTTPProvider(self.URL))
         w3.middleware_onion.inject(geth_poa_middleware, layer=0)
         return w3
-    
+
     def write_abi(self, name, contract_address):
         response = requests.get(
             f"https://api.bscscan.com/api?"
@@ -72,7 +72,7 @@ class Transactor(ATransactor):
         return btx
 
     def get_deploy_tx(self, w3_contract):
-        
+
         nonce = self.get_nonce(self.myaddr)
         # print(acct.address, nonce)
 
@@ -95,5 +95,3 @@ class Transactor(ATransactor):
         # print(tx)
 
         return tx
-
-    

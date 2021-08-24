@@ -7,17 +7,14 @@ ledger_usb.LedgerUsbException: Invalid status in reply: 0x6985 (User declined on
 
 import click
 import sys
-from loguru import logger
 import yaml
 import json
 import hashlib
+from loguru import logger
 import logutils
-from account import LedgerAccount
+from account import LedgerAccount, get_ledger
 from ledger_usb import *
 import transact
-# import transact_bsc
-# import transact_eth
-# import transact_bsctest
 
 logger.configure(**logutils.logconfig)
 
@@ -26,11 +23,9 @@ logger.configure(**logutils.logconfig)
 def log(s1):
     logger.info(f"{s1}")
 
+
 def logcrit(s1):
     logger.warning(f"{s1}")
-
-
-
 
 
 def confirm_msg(msg):
@@ -58,21 +53,6 @@ def sha256sum(filename):
     return h.hexdigest()
 
 
-def get_ledger(accountID):
-    try:
-        ledger_account = LedgerAccount(account_id=accountID)
-        address = ledger_account.get_address(accountID)
-        log(f"ledger loaded accountID {accountID}\taddress: {address}")
-        return ledger_account
-    except LedgerUsbException as e:
-        if e.status == STATUS_APP_NOT:
-            logcrit("app not ready")
-            sys.exit(1)
-        else:
-            logcrit(f"ledger not active: {e}. {e.status}")
-            sys.exit(1)
-
-
 def check_critical():
     logcrit(f"PERFORMING CRITICAL TASKS")
     logcrit(f"YES/NO (Y/N)")
@@ -85,8 +65,6 @@ def check_critical():
     else:
         logcrit(f"dont proceed")
         sys.exit(0)
-
-
 
 
 @click.group()
@@ -106,7 +84,7 @@ def ltools(ctx, aid: int, chain: str):
         # sys.exit(0)
 
     builddir = cfg["builddir"]
-    print ("builddir ", builddir)
+    print("builddir ", builddir)
 
     if chain == None:
         chain = cfg["network"]
@@ -119,11 +97,10 @@ def ltools(ctx, aid: int, chain: str):
         x = f.read()
         whitelist = json.loads(x)
 
-
     logger.debug(f"main {ctx} {aid}")
     ledger_account = get_ledger(aid)
     myaddr = ledger_account.address
-    transactor = transact.get_transactor(chain, myaddr, builddir, whitelist, log, logcrit)
+    transactor = transact.get_transactor(chain, myaddr, builddir, whitelist)
 
     ctx.obj["ledger_account"] = ledger_account
     ctx.obj["transactor"] = transactor
@@ -204,12 +181,12 @@ def listall(ctx):
 
 
 def send_tx(ledger_account, transactor, sendamount, to_address):
-    logger.debug(f"send_tx {sendamount} {to_address}")
-
     myaddr = ledger_account.address
+    logger.debug(f"send_tx {sendamount} {to_address} from: {myaddr}")
     txd = transactor.get_send_tx(myaddr, to_address, sendamount)
 
     try:
+        logger.info("sign...")
         signedtx = ledger_account.signTransaction(txd)
         log(signedtx)
         transactor.pushtx(signedtx)
@@ -233,16 +210,21 @@ def sendmoney(ctx, amount, to):
     txr = ctx.obj["transactor"]
     ledger_account = ctx.obj["ledger_account"]
     amountDEC = int(amount * 10 ** txr.bnb_dec)
-
-    log(f"send {txr.name_currency} amount: {amount} amountDEC: {amountDEC} to: {to}")
+    myaddr = ledger_account.address
+    logger.info(f"send {txr.name_currency} amount: {amount} amountDEC: {amountDEC} to: {to} from: {myaddr}")
     txr.activate_push()
+
+    bnb_bal = txr.ethbal(myaddr)
+    if amountDEC > bnb_bal:
+        logger.warning(f"insufficient balance {bnb_bal}")
+        sys.exit(1)
 
     # TODO check high amounts
     if toaddrLabel in txr.whitelist.keys():
         addr = txr.whitelist[to]
         send_tx(ledger_account, txr, amountDEC, addr)
     else:
-        logcrit("address not whitelisted")
+        logger.warning(f"address not whitelisted {txr.whitelist}")
 
 
 @ltools.command()
@@ -310,7 +292,7 @@ def deploy(ctx, contractname):
     msg = f"deploytx {contractname} from {myaddr} ({ch})"
     logcrit(msg)
     confirm_msg(msg)
-    #TODO pass constructor args
+    # TODO pass constructor args
     cargs = "NRTSeed", "NRTS", "Seed"
     tx = transactor.get_deploy_tx(w3_contract, cargs)
     log(tx)
@@ -334,11 +316,13 @@ def deploy(ctx, contractname):
     else:
         logcrit(f"deploy failed {tx_receipt}")
 
+
 # @ltools.command()
 # @click.option("--contractname", help="the name of the contract")
 # @click.option("--function", help="the name of the function to call")
 # @click.pass_context
 # def transact(ctx, contractname, function):
+
 
 @ltools.command()
 @click.pass_context
@@ -356,8 +340,10 @@ def version(ctx):
     log("version")
     log(f"{ctx.obj['ledger_account'].get_version()}")
 
+
 def cli():
     ltools(obj={})
+
 
 if __name__ == "__main__":
     log("start")

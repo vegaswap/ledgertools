@@ -20,6 +20,30 @@ from eth_utils.curried import keccak
 from eth_account.datastructures import SignedTransaction
 
 from web3 import Web3
+from loguru import logger
+import sys
+import logutils
+
+logger.configure(**logutils.logconfig)
+
+
+def get_ledger(accountID):
+    try:
+        ledger_account = LedgerAccount(account_id=accountID)
+        address = ledger_account.get_address(accountID)
+        logger.info(f"ledger loaded accountID {accountID}\taddress: {address}")
+        return ledger_account
+    except LedgerUsbException as e:
+        if e.status == STATUS_APP_NOT:
+            logger.warning("app not ready")
+            sys.exit(1)
+        elif e.status == STATUS_APP_NOT:
+            logger.warning(f"{e} {e.status}")
+            # logcrit(f"ledger not active: {e}. {e.status}")
+            sys.exit(1)
+        else:
+            logger.warning(f"ledger not active: {e}. {e.status}")
+            sys.exit(1)
 
 
 class LedgerAccount:

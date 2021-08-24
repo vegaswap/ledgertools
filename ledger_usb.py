@@ -192,7 +192,8 @@ class LedgerUsbDevice:
         else:
             if status == STATUS_DECLINED:
                 message = "User declined"
-                raise LedgerExceptionDeclined("LedgerExceptionDeclined")
+                # raise LedgerUsbException("LedgerExceptionDeclined")
+                raise LedgerUsbException(message, status=status)
             elif status == STATUS_APP_SLEEP:
                 message = "app sleeping"
                 raise LedgerUsbException(message, status=status)
