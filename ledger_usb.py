@@ -9,6 +9,9 @@ import time
 from eth_utils import to_hex
 
 import hid
+import lgs
+import log
+
 
 CHANNEL_ID = 0x0101
 TAG_APDU = 0x05
@@ -116,9 +119,6 @@ class LedgerUsbDevice:
     - https://github.com/ethereum/go-ethereum/blob/master/accounts/usbwallet/ledger.go
     """
 
-    # logger = logging.getLogger('eth_account.signers.ledger.LedgerUsbDevices')
-    logger = logging.getLogger("ledger")
-
     def __init__(self):
         hidDevicePath = None
         for hidDevice in hid.enumerate(0, 0):
@@ -140,7 +140,7 @@ class LedgerUsbDevice:
         self.device = dev
 
     def exchange(self, apdu, timeout=20):
-        self.logger.debug("Sending apdu to Ledger device: apdu={}".format(to_hex(apdu)))
+        log.debug("Sending apdu to Ledger device: apdu={}".format(to_hex(apdu)))
 
         # Construct the wrapped packets
         packets = wrap_apdu(apdu)
@@ -187,7 +187,7 @@ class LedgerUsbDevice:
 
         if status == STATUS_OK:
             message = "Received apdu from Ledger device: apdu={}"
-            self.logger.debug(message.format(to_hex(reply)))
+            log.debug(message.format(to_hex(reply)))
             return reply[:-2]
         else:
             if status == STATUS_DECLINED:
@@ -221,7 +221,7 @@ class LedgerUsbDevice:
         (data_sign, major_version, minor_version, patch_version) = struct.unpack(
             ">?BBB", reply
         )
-        print(
+        log.info(
             "Ledger Version: (major, minor, patch) ",
             (data_sign, major_version, minor_version, patch_version),
         )

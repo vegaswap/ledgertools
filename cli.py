@@ -19,11 +19,6 @@ from ledger_usb import *
 import transact
 
 
-
-# logger.configure(**logutil_ntwk.get_config(""))
-# util functions until click logging is hooked up to file log
-
-
 def confirm_msg(msg):
     log.warning(f"confirm {msg}")
     log.warning(f"YES/NO (Y/N)")
@@ -93,7 +88,6 @@ def ltools(ctx, aid: int, chain: str):
     lgs.addlevel(chain)
 
     log.warning(f"selected chain {chain}")
-
 
     wl = cfg["whitelist"]
     with open(wl, "r") as f:
@@ -352,7 +346,4 @@ def cli():
 
 
 if __name__ == "__main__":
-    import pdb
-    # pdb.set_trace()
-    # log.info("start")
     ltools(obj={})
