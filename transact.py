@@ -8,10 +8,8 @@ from web3.middleware import geth_poa_middleware
 
 import os
 import sys
-from loguru import logger
-import logutils
-
-logger.configure(**logutils.logconfig)
+import lgs
+import log
 
 
 class ATransactor:

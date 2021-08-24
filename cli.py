@@ -12,12 +12,12 @@ import json
 import hashlib
 
 # from loguru import logger
-import logutil_ntwk
+import lgs
+import log
 from account import LedgerAccount, get_ledger
 from ledger_usb import *
 import transact
 
-import log
 
 
 # logger.configure(**logutil_ntwk.get_config(""))
@@ -25,16 +25,16 @@ import log
 
 
 def confirm_msg(msg):
-    log.warn(f"confirm {msg}")
-    log.warn(f"YES/NO (Y/N)")
+    log.warning(f"confirm {msg}")
+    log.warning(f"YES/NO (Y/N)")
     yesno = input()
     if yesno == "Y":
-        log.warn(f"PROCEED")
+        log.warning(f"PROCEED")
     elif yesno == "N":
-        log.warn(f"dont proceed")
+        log.warning(f"dont proceed")
         sys.exit(0)
     else:
-        log.warn(f"dont proceed")
+        log.warning(f"dont proceed")
         sys.exit(0)
 
 
@@ -50,16 +50,16 @@ def sha256sum(filename):
 
 
 def check_critical():
-    log.warn(f"PERFORMING CRITICAL TASKS")
-    log.warn(f"YES/NO (Y/N)")
+    log.warning(f"PERFORMING CRITICAL TASKS")
+    log.warning(f"YES/NO (Y/N)")
     yesno = input()
     if yesno == "Y":
-        log.warn(f"PROCEED")
+        log.warning(f"PROCEED")
     elif yesno == "N":
-        log.warn(f"dont proceed")
+        log.warning(f"dont proceed")
         sys.exit(0)
     else:
-        log.warn(f"dont proceed")
+        log.warning(f"dont proceed")
         sys.exit(0)
 
 
@@ -76,7 +76,7 @@ def ltools(ctx, aid: int, chain: str):
         aid = int(aid)
     except:
         aid = cfg["accountID"]
-        # log.warn(f"account id has to be an integer")
+        # log.warning(f"account id has to be an integer")
         # sys.exit(0)
 
     builddir = cfg["builddir"]
@@ -84,19 +84,16 @@ def ltools(ctx, aid: int, chain: str):
 
     if chain == None:
         chain = cfg["network"]
-        # log.warn("invalid chain passed")
+        # log.warning("invalid chain passed")
         # sys.exit(1)
 
-    il = logutil_ntwk.Loglevel(chain)
+    # il = lgs.get_config(chain)
+    # log.info = logger.info
+    # log.warn = logger.warning
+    lgs.addlevel(chain)
 
-    log.info = il.info
-    log.warn = il.warn
-    log.warn(f"selected chain {chain}")
+    log.warning(f"selected chain {chain}")
 
-    # log.info("??")
-
-    # globals()["NTWK"] = chain
-    # logger.configure(**logutils.get_config(chain))
 
     wl = cfg["whitelist"]
     with open(wl, "r") as f:
@@ -198,9 +195,9 @@ def send_tx(ledger_account, transactor, sendamount, to_address):
         transactor.pushtx(signedtx)
     except LedgerUsbException:
         # if LedgerUsbException.status == "User declined on device":
-        #     log.warn("you declined")
+        #     log.warning("you declined")
         # else:
-        log.warn(f"LedgerUsbException {LedgerUsbException}")
+        log.warning(f"LedgerUsbException {LedgerUsbException}")
 
 
 @ltools.command()
@@ -210,7 +207,7 @@ def send_tx(ledger_account, transactor, sendamount, to_address):
 def sendmoney(ctx, amount, to):
     toaddrLabel = to
     if amount > 1:
-        log.warn("amount too large")
+        log.warning("amount too large")
         sys.exit(1)
 
     txr = ctx.obj["transactor"]
@@ -224,7 +221,7 @@ def sendmoney(ctx, amount, to):
 
     bnb_bal = txr.ethbal(myaddr)
     if amountDEC > bnb_bal:
-        log.warn(f"insufficient balance {bnb_bal}")
+        log.warning(f"insufficient balance {bnb_bal}")
         sys.exit(1)
 
     # TODO check high amounts
@@ -232,7 +229,7 @@ def sendmoney(ctx, amount, to):
         addr = txr.whitelist[to]
         send_tx(ledger_account, txr, amountDEC, addr)
     else:
-        log.warn(f"address not whitelisted {txr.whitelist}")
+        log.warning(f"address not whitelisted {txr.whitelist}")
 
 
 @ltools.command()
@@ -246,11 +243,11 @@ def sendusdt(ctx, amount, to):
     log.info(f"send usdt {amount} {toaddrLabel}")
     ledger_account = ctx.obj["ledger_account"]
     transactor = ctx.obj["transactor"]
-    log.warn(f"send {amount}")
-    log.warn(f"to  {toaddrLabel}")
+    log.warning(f"send {amount}")
+    log.warning(f"to  {toaddrLabel}")
     maxAmount = 1000
     if amount > maxAmount:
-        log.warn("higher than max amount")
+        log.warning("higher than max amount")
         sys.exit(1)
     # can only send to whitelisted addresses
     if toaddrLabel in transactor.whitelist.keys():
@@ -267,7 +264,7 @@ def sendusdt(ctx, amount, to):
         transactor.pushtx(signedtx)
 
     else:
-        log.warn("address not whitelisted")
+        log.warning("address not whitelisted")
 
 
 # def append_deploymap(name, contractAddress):
@@ -278,7 +275,7 @@ def sendusdt(ctx, amount, to):
 @click.pass_context
 def deploy(ctx, contractname):
     if contractname == "" or contractname == None:
-        log.warn("no contract name provided")
+        log.warning("no contract name provided")
         sys.exit(1)
 
     confirm_msg("deploying contract %s" % contractname)
@@ -299,7 +296,7 @@ def deploy(ctx, contractname):
     myaddr = ledger_account.address
     ch = ctx.obj["chain"]
     msg = f"deploytx {contractname} from {myaddr} ({ch})"
-    log.warn(msg)
+    log.warning(msg)
     confirm_msg(msg)
     # TODO pass constructor args
     cargs = "NRTSeed", "NRTS", "Seed"
@@ -309,7 +306,7 @@ def deploy(ctx, contractname):
     try:
         signedtx = ledger_account.signTransaction(tx)
     except LedgerExceptionDeclined as e:
-        log.warn(f"user declined {e}")
+        log.warning(f"user declined {e}")
         sys.exit(1)
 
     log.info(f"signedtx {signedtx}")
@@ -323,7 +320,7 @@ def deploy(ctx, contractname):
         # append to map of addresses
         # append_deploymap
     else:
-        log.warn(f"deploy failed {tx_receipt}")
+        log.warning(f"deploy failed {tx_receipt}")
 
 
 # @ltools.command()
@@ -355,5 +352,7 @@ def cli():
 
 
 if __name__ == "__main__":
+    import pdb
+    # pdb.set_trace()
     # log.info("start")
     ltools(obj={})
