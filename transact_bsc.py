@@ -54,7 +54,7 @@ class Transactor(ATransactor):
         amountDEC = int(amountDEC)
         log.info(f"send_erc20 dec: {amountDEC} {to_address}")
 
-        ercabi = self.load_abi("erc20")
+        ercabi = self.load_abi("IERC20")
         ctr = self.load_contract(self.USDT, ercabi)
         log.info(f"erc contract {ctr.functions.name().call()}")
         log.info(f"erc Decimals {ctr.functions.decimals().call()}")
@@ -73,7 +73,7 @@ class Transactor(ATransactor):
         btx = ctr.functions.transfer(to_address, amountDEC).buildTransaction(tx_params)
         return btx
 
-    def get_deploy_tx(self, w3_contract):
+    def get_deploy_tx(self, w3_contract, cargs=None):
 
         nonce = self.get_nonce(self.myaddr)
         # log.info(acct.address, nonce)
@@ -85,7 +85,11 @@ class Transactor(ATransactor):
             "nonce": nonce,
             "gasPrice": self.gasPrice,
         }
-        tx = w3_contract.constructor().buildTransaction(txparams)
+        print ("> ",cargs)
+        if cargs:
+            tx = w3_contract.constructor(*cargs).buildTransaction(txparams)
+        else:
+            tx = w3_contract.constructor().buildTransaction(txparams)
         # log.info(tx)
 
         est = self.w3.eth.estimate_gas(tx)
@@ -93,7 +97,10 @@ class Transactor(ATransactor):
         # add some gas just in case
         use_gas = int(est * 1.5)
         txparams["gas"] = use_gas
-        tx = w3_contract.constructor().buildTransaction(txparams)
+        if cargs:
+            tx = w3_contract.constructor(*cargs).buildTransaction(txparams)
+        else:
+            tx = w3_contract.constructor().buildTransaction(txparams)
         # log.info(tx)
 
         return tx

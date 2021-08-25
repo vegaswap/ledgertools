@@ -24,17 +24,17 @@ class ATransactor:
         # self.bnb_dec = 18
 
     def activate_push(self):
-        logger.warning(f"ACTIVATE PUSH")
-        logger.warning(f"YES/NO (Y/N)")
+        log.warning(f"ACTIVATE PUSH")
+        log.warning(f"YES/NO (Y/N)")
         yesno = input()
         if yesno == "Y":
-            logger.warning(f"PROCEED")
+            log.warning(f"PROCEED")
             self.pushactive = True
         elif yesno == "N":
-            logger.warning(f"dont proceed")
+            log.warning(f"dont proceed")
             sys.exit(0)
         else:
-            logger.warning(f"dont proceed")
+            log.warning(f"dont proceed")
             sys.exit(0)
 
     def get_contract_json(self, ctr_name):
@@ -92,31 +92,31 @@ class ATransactor:
             "gasPrice": self.gasPrice,
             "nonce": nonce,
         }
-        logger.info(f"txd {txd}")
+        log.info(f"txd {txd}")
         return txd
 
     def pushtx(self, signedtx):
         if self.pushactive:
-            logger.info(f"push tx {signedtx.rawTransaction}")
+            log.info(f"push tx {signedtx.rawTransaction}")
             try:
                 result = self.w3.eth.sendRawTransaction(signedtx.rawTransaction)
             except Exception as e:
                 # ValueError: {'code': -32000, 'message': 'transaction underpriced'}
-                logger.warning(f"{e}")
+                log.warning(f"{e}")
                 return
 
             rh = result.hex()
-            logger.info(f"txhash {rh}")
+            log.info(f"txhash {rh}")
 
             tx_receipt = self.w3.eth.waitForTransactionReceipt(rh)
-            logger.info(f"status: {tx_receipt['status']}")
-            logger.info(f"blockNumber: {tx_receipt['blockNumber']}")
-            logger.info(f"gasUsed: {tx_receipt['gasUsed']}")
+            log.info(f"status: {tx_receipt['status']}")
+            log.info(f"blockNumber: {tx_receipt['blockNumber']}")
+            log.info(f"gasUsed: {tx_receipt['gasUsed']}")
             # contractAddress
             # cumulativeGasUsed
             return tx_receipt
         else:
-            logger.warning("push not activated")
+            log.warning("push not activated")
 
 
 import transact_bsc
@@ -134,5 +134,5 @@ def get_transactor(ntwk, myaddr, builddir, whitelist):
         print(whitelist)
         transactor = transact_bsctest.Transactor(myaddr, builddir, whitelist)
     else:
-        logger.warning("unknown network")
+        log.warning("unknown network")
     return transactor
