@@ -140,7 +140,7 @@ class LedgerUsbDevice:
         self.device = dev
 
     def exchange(self, apdu, timeout=20):
-        log.debug("Sending apdu to Ledger device: apdu={}".format(to_hex(apdu)))
+        # log.debug("Sending apdu to Ledger device: apdu={}".format(to_hex(apdu)))
 
         # Construct the wrapped packets
         packets = wrap_apdu(apdu)
@@ -187,7 +187,7 @@ class LedgerUsbDevice:
 
         if status == STATUS_OK:
             message = "Received apdu from Ledger device: apdu={}"
-            log.debug(message.format(to_hex(reply)))
+            # log.debug(message.format(to_hex(reply)))
             return reply[:-2]
         else:
             if status == STATUS_DECLINED:

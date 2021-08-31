@@ -24,28 +24,26 @@ def warn_filter(record):
 def debug_filter(record):
     lvl = record["level"].name
     if lvl == "DEBUG":
-        return True
+        return False
     else:
-        return True
+        return False
 
 
 def addlevel(ntwk):
-    logger.remove()
-    fmtstr = (
-        "<cyan>%s</cyan> - <green>{time:YYYY-MM-DD HH:mm:ss}</green> | <red>{level}</red> | <white>{message}</white>"
-        % ntwk
-    )
-    logger.add(sys.stdout, level="WARNING", format=fmtstr, filter=warn_filter)
+    # logger.remove()
+    s = "<cyan>%s</cyan> - <green>{time:YYYY-MM-DD HH:mm:ss}</green> | <red>{level}</red> | <white>{message}</white>"% ntwk
+    # s = "{message}"
+    # logger.add(sys.stdout, level="WARNING", format=fmtstr)
+    logger.add(sys.stdout, level="WARNING",format=s)
 
-    fmtstr = (
-        "<cyan>%s</cyan> - <green>{time:YYYY-MM-DD HH:mm:ss}</green> | <blue>{level}</blue> | <white>{message}</white>"
-        % ntwk
-    )
-    logger.add(sys.stdout, level="INFO", format=fmtstr, filter=info_filter)
+    # s= "<cyan>%s</cyan> - <green>{time:YYYY-MM-DD HH:mm:ss}</green> | <blue>{level}</blue> | <white>{message}</white>"% ntwk
+    # logger.add(sys.stdout, level="INFO", format=fmtstr, filter=info_filter)
 
     # logger.add(sys.stdout, level="DEBUG",format=fmtstr,filter=debug_filter)
 
-    logger.add("ltools.log", level="INFO", format=fmtstr, filter=info_filter)
+    s= "<cyan>ZZ</cyan> - <green>{time:YYYY-MM-DD HH:mm:ss}</green> | <blue>{level}</blue> | <white>{message}</white>"
+    # logger.add("ltools.log", level="INFO", format=fmtstr, filter=info_filter)
+    logger.add("ltools.log", level="INFO",format=s,filter=info_filter)
 
 
 ###global setup
@@ -55,6 +53,8 @@ import types
 
 sys.modules["log"] = types.ModuleType("log")
 import log
+
+# addlevel("BSC")
 
 log.info = logger.info
 log.warning = logger.warning

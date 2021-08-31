@@ -4,6 +4,10 @@ ledgertools - the main console application
 handle
 ledger_usb.LedgerUsbException: Invalid status in reply: 0x6985 (User declined on device)
 """
+import sys
+
+sys.path.insert(0, "/Users/ben/projects/vegaswap/repos/transactor")
+
 
 import click
 import sys
@@ -85,7 +89,7 @@ def ltools(ctx, aid: int, chain: str):
     # il = lgs.get_config(chain)
     # log.info = logger.info
     # log.warn = logger.warning
-    lgs.addlevel(chain)
+    # lgs.addlevel(chain)
 
     log.warning(f"selected chain {chain}")
 
@@ -213,9 +217,9 @@ def sendmoney(ctx, amount, to):
     )
     txr.activate_push()
 
-    bnb_bal = txr.ethbal(myaddr)
+    bnb_bal = txr.ethbal(myaddr)    
     if amountDEC > bnb_bal:
-        log.warning(f"insufficient balance {bnb_bal}")
+        log.warning(f"insufficient balance. current balance: {bnb_bal}")
         sys.exit(1)
 
     # TODO check high amounts
@@ -239,7 +243,7 @@ def sendusdt(ctx, amount, to):
     transactor = ctx.obj["transactor"]
     log.warning(f"send {amount}")
     log.warning(f"to  {toaddrLabel}")
-    maxAmount = 1000
+    maxAmount = 20000
     if amount > maxAmount:
         log.warning("higher than max amount")
         sys.exit(1)
