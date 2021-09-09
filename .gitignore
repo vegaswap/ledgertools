@@ -7,3 +7,4 @@ whitelist*.json
 account_tester.py
 dist/
 ledgertools.egg-info/
+settings.py

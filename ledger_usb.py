@@ -9,8 +9,6 @@ import time
 from eth_utils import to_hex
 
 import hid
-import lgs
-import log
 
 
 CHANNEL_ID = 0x0101
@@ -119,7 +117,8 @@ class LedgerUsbDevice:
     - https://github.com/ethereum/go-ethereum/blob/master/accounts/usbwallet/ledger.go
     """
 
-    def __init__(self):
+    def __init__(self, log):
+        self.log = log
         hidDevicePath = None
         for hidDevice in hid.enumerate(0, 0):
             if hidDevice["vendor_id"] == LEDGER_VENDOR_ID:
@@ -221,7 +220,7 @@ class LedgerUsbDevice:
         (data_sign, major_version, minor_version, patch_version) = struct.unpack(
             ">?BBB", reply
         )
-        log.info(
+        self.log.info(
             "Ledger Version: (major, minor, patch) ",
             (data_sign, major_version, minor_version, patch_version),
         )

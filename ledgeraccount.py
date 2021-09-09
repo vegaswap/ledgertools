@@ -18,29 +18,27 @@ from eth_account._utils.transactions import (
 )
 from eth_utils.curried import keccak
 from eth_account.datastructures import SignedTransaction
-import lgs
-import log
 from web3 import Web3
 import sys
 
 
-def get_ledger(accountID):
-    try:
-        ledger_account = LedgerAccount(account_id=accountID)
-        address = ledger_account.get_address(accountID)
-        log.info(f"ledger loaded accountID {accountID}\taddress: {address}")
-        return ledger_account
-    except LedgerUsbException as e:
-        if e.status == STATUS_APP_NOT:
-            log.warning("app not ready")
-            sys.exit(1)
-        elif e.status == STATUS_APP_NOT:
-            log.warning(f"{e} {e.status}")
-            # logcrit(f"ledger not active: {e}. {e.status}")
-            sys.exit(1)
-        else:
-            log.warning(f"ledger not active: {e}. {e.status}")
-            sys.exit(1)
+# def get_ledger(accountID):
+#     try:
+#         ledger_account = LedgerAccount(account_id=accountID)
+#         address = ledger_account.get_address(accountID)
+#         log.info(f"ledger loaded accountID {accountID}\taddress: {address}")
+#         return ledger_account
+#     except LedgerUsbException as e:
+#         if e.status == STATUS_APP_NOT:
+#             log.warning("app not ready")
+#             sys.exit(1)
+#         elif e.status == STATUS_APP_NOT:
+#             log.warning(f"{e} {e.status}")
+#             # logcrit(f"ledger not active: {e}. {e.status}")
+#             sys.exit(1)
+#         else:
+#             log.warning(f"ledger not active: {e}. {e.status}")
+#             sys.exit(1)
 
 
 class LedgerAccount:
@@ -52,11 +50,21 @@ class LedgerAccount:
     - https://github.com/bargst/pyethoff/blob/master/tx_sign.py
     """
 
-    def __init__(self, device=None, account_id=0):
-        URL = "https://bsc-dataseed.binance.org"
-        self.w3 = Web3(Web3.HTTPProvider(URL))
-        if device == None:
-            self.device = LedgerUsbDevice()
+    def __init__(self, account_id, log):
+        # if device == None:
+        try:
+            self.device = LedgerUsbDevice(log)
+        except LedgerUsbException as e:
+            if e.status == STATUS_APP_NOT:
+                log.warning("app not ready")
+                sys.exit(1)
+            elif e.status == STATUS_APP_NOT:
+                log.warning(f"{e} {e.status}")
+                # logcrit(f"ledger not active: {e}. {e.status}")
+                sys.exit(1)
+            else:
+                log.warning(f"ledger not active: {e}. {e.status}")
+                sys.exit(1)
 
         self.account_id = account_id
         self.path_prefix = "m/44'/60'/%i'/0/0"
@@ -214,7 +222,7 @@ class LedgerAccount:
         # TODO
         # myaddress = address_for_path(self.device, self.bip32_path)
 
-        # # sanity check
+        # sanity check
         # recover_sender = Account.recover_transaction(rlp_encoded)
         # assert recover_sender == myaddress
 

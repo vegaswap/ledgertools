@@ -1,7 +1,5 @@
 import sys
 from loguru import logger
-
-import sys
 import types
 
 
@@ -31,34 +29,58 @@ def debug_filter(record):
 
 def addlevel(ntwk):
     # logger.remove()
-    s = "<cyan>%s</cyan> - <green>{time:YYYY-MM-DD HH:mm:ss}</green> | <red>{level}</red> | <white>{message}</white>"% ntwk
+    s = (
+        "<red>%s</red> - <green>{time:YYYY-MM-DD HH:mm:ss}</green> | <red>{level}</red> | <white>{message}</white>"
+        % ntwk
+    )
     # s = "{message}"
     # logger.add(sys.stdout, level="WARNING", format=fmtstr)
-    logger.add(sys.stdout, level="WARNING",format=s)
+    logger.add(sys.stdout, level="WARNING", format=s)
 
     # s= "<cyan>%s</cyan> - <green>{time:YYYY-MM-DD HH:mm:ss}</green> | <blue>{level}</blue> | <white>{message}</white>"% ntwk
     # logger.add(sys.stdout, level="INFO", format=fmtstr, filter=info_filter)
 
     # logger.add(sys.stdout, level="DEBUG",format=fmtstr,filter=debug_filter)
 
-    s= "<cyan>ZZ</cyan> - <green>{time:YYYY-MM-DD HH:mm:ss}</green> | <blue>{level}</blue> | <white>{message}</white>"
+    s = "<cyan>ZZ</cyan> - <green>{time:YYYY-MM-DD HH:mm:ss}</green> | <blue>{level}</blue> | <white>{message}</white>"
     # logger.add("ltools.log", level="INFO", format=fmtstr, filter=info_filter)
-    logger.add("ltools.log", level="INFO",format=s,filter=info_filter)
+    logger.add("ltools.log", level="INFO", format=s, filter=info_filter)
 
 
 ###global setup
+def setup_logger(ntwk):
 
-import sys
-import types
+    import sys
+    import types
 
-sys.modules["log"] = types.ModuleType("log")
-import log
+    # addlevel("BSC")
 
-# addlevel("BSC")
+    logger.remove()
+    s = (
+        "<red>%s</red> - <green>{time:YYYY-MM-DD HH:mm:ss}</green> | <red>{level}</red> | <white>{message}</white>"
+        % ntwk
+    )
+    # s = "{message}"
+    # logger.add(sys.stdout, level="WARNING", format=fmtstr)
+    logger.add(sys.stdout, level="WARNING", format=s, filter=warn_filter)
+    s = (
+        "<cyan>%s</cyan> - <green>{time:YYYY-MM-DD HH:mm:ss}</green> | <blue>{level}</blue> | <white>{message}</white>"
+        % ntwk
+    )
+    # s= "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <blue>{level}</blue> | <white>{message}</white>"
+    logger.add(sys.stdout, level="INFO", format=s, filter=info_filter)
 
-log.info = logger.info
-log.warning = logger.warning
-log.debug = logger.debug
+    logger.add("launch_info.log", level="INFO", format=s, filter=info_filter)
+    logger.add("launch_warn.log", level="INFO", format=s, filter=warn_filter)
+
+    # sys.modules["xlog"] = types.ModuleType("log")
+    sys.modules["log"] = logger
+    import log
+
+    # xlog.info = logger.info
+    # xlog.warning = logger.warning
+    # xlog.debug = logger.debug
+    return log
 
 
 # class InterceptHandler(logging.Handler):
