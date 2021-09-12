@@ -12,8 +12,8 @@ from settings import *
 # sys.path.insert(0, "/Users/ben/projects/vegaswap/repos/transactor")
 sys.path.append(ddir)
 sys.path.append(tdir)
-sys.path.append(ldir)
-sys.path.append(udir)
+# sys.path.append(ldir)
+# sys.path.append(udir)
 sys.path.insert(0, wdir)
 print(udir)
 
