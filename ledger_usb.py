@@ -6,7 +6,8 @@ import logging
 import struct
 import time
 
-from eth_utils import to_hex
+# from eth_utils import to_hex
+from eth_utils.conversions import to_hex
 
 import hid
 
@@ -130,6 +131,7 @@ class LedgerUsbDevice:
                     and hidDevice["usage_page"] == LEDGER_USAGE_PAGE_ID
                 ):
                     hidDevicePath = hidDevice["path"]
+        print(hidDevicePath)
         if hidDevicePath is not None:
             dev = hid.device()
             dev.open_path(hidDevicePath)
